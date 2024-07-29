@@ -39,6 +39,7 @@
         <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
         <node.version>v21.6.1</node.version>
         <pnpm.version>9.5.0</pnpm.version>
+        <mybatis.flex.version>1.9.4</mybatis.flex.version>
     </properties>
     <packaging>pom</packaging>
     <modules>
