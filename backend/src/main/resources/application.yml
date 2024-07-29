@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: orchid
+  profiles:
+    active: dev

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.2</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>cn.master</groupId>
+    <artifactId>orchid</artifactId>
+    <version>${revision}</version>
+    <name>orchid</name>
+    <description>orchid</description>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer>
+            <id>11's papa</id>
+            <name>11's papa</name>
+            <email>the2ndindec@gmail.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <properties>
+        <revision>1.0.0</revision>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+        <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
+        <node.version>v21.6.1</node.version>
+        <pnpm.version>9.5.0</pnpm.version>
+    </properties>
+    <packaging>pom</packaging>
+    <modules>
+        <module>backend</module>
+        <module>frontend</module>
+    </modules>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.json</include>
+                    <include>**/*.tpl</include>
+                    <include>**/*.js</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
+
+</project>
