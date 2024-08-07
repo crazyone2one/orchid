@@ -9,6 +9,8 @@ import cn.master.backend.payload.dto.user.UserRoleResourceDTO;
 import cn.master.backend.service.UserRolePermissionService;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -45,5 +47,12 @@ public class UserRolePermissionServiceImpl extends ServiceImpl<UserRolePermissio
         }
         permissionDTO.setList(list);
         return permissionDTO;
+    }
+
+    @Override
+    public List<UserRolePermission> getPermissions(List<String> strings, String target) {
+        // 获取当前登录用户
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return queryChain().where(UserRolePermission::getRoleId).in(strings).list();
     }
 }

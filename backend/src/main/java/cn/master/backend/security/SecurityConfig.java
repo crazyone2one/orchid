@@ -1,8 +1,11 @@
 package cn.master.backend.security;
 
+import cn.master.backend.service.UserRolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -28,13 +31,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final UserRolePermissionService userRolePermissionService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
+        http.formLogin(AbstractHttpConfigurer::disable);
+        http.httpBasic(AbstractHttpConfigurer::disable);
+        //http.anonymous(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> {
-            authorize.requestMatchers("/auth/**").permitAll();
-            authorize.requestMatchers("/swagger-ui*/**","/v3/api-docs/**").permitAll();
+            authorize.requestMatchers("/auth/login", "/auth/refreshToken").permitAll();
+            authorize.requestMatchers("/swagger-ui*/**", "/v3/api-docs/**").permitAll();
             authorize.anyRequest().authenticated();
         });
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -68,5 +75,12 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(new CustomPermissionEvaluator(userRolePermissionService));
+        return expressionHandler;
     }
 }

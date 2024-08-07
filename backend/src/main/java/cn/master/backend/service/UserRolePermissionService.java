@@ -4,6 +4,8 @@ import cn.master.backend.payload.dto.user.UserRolePermissionDTO;
 import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.UserRolePermission;
 
+import java.util.List;
+
 /**
  * 用户组权限 服务层。
  *
@@ -12,4 +14,6 @@ import cn.master.backend.entity.UserRolePermission;
  */
 public interface UserRolePermissionService extends IService<UserRolePermission> {
     UserRolePermissionDTO getUserRolePermission(String userId);
+
+    List<UserRolePermission> getPermissions(List<String> strings, String target);
 }

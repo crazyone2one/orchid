@@ -8,12 +8,14 @@ import com.mybatisflex.annotation.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.mybatisflex.core.handler.JacksonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serial;
+import java.util.List;
 
 /**
  * 用户api key 实体类。
@@ -40,9 +42,9 @@ public class UserKey implements Serializable {
     /**
      * 用户ID
      */
-    private String createUser;
+    private String userId;
     @Column(ignore = true)
-    @RelationOneToOne(selfField = "createUser", targetField = "name", targetTable = "user")
+    @RelationOneToOne(selfField = "userId", targetField = "id", targetTable = "user")
     private User user;
 
     /**
@@ -78,4 +80,6 @@ public class UserKey implements Serializable {
 
     private String description;
 
+    @Column(typeHandler = JacksonTypeHandler.class)
+    private List<String> roles;
 }

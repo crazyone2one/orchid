@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,7 +31,7 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 @Component
 public class JwtGenerator {
-    private static final String AUTHORITIES_KEY = "roles";
+    private static final String AUTHORITIES_KEY = "auth";
     public static final String SECRET = "357638792F423F4428472B4B6250655368566D597133743677397A2443264629";
     private final long expiration = 1L;
 
@@ -39,10 +40,19 @@ public class JwtGenerator {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
+        return createToken(username, authorities);
+    }
+
+    private String createToken(String username, Collection<? extends GrantedAuthority> authorities) {
+        var claimsBuilder = Jwts.claims().subject(username);
+        if (!authorities.isEmpty()) {
+            claimsBuilder.add(AUTHORITIES_KEY, authorities.stream().map(GrantedAuthority::getAuthority).collect(joining(",")));
+        }
         return Jwts.builder()
                 .id(UUID.randomUUID().toString().replace("-", ""))
                 .subject(username)
+                .claims(claimsBuilder.build())
                 .issuer("orchid")
                 .issuedAt(Date.from(now()))
                 .expiration(Date.from(now().plus(expiration, ChronoUnit.HOURS)))
@@ -56,14 +66,7 @@ public class JwtGenerator {
         if (!authorities.isEmpty()) {
             claimsBuilder.add(AUTHORITIES_KEY, authorities.stream().map(GrantedAuthority::getAuthority).collect(joining(",")));
         }
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
-                .subject(authentication.getName())
-                .claims(claimsBuilder.build())
-                .issuer("orchid")
-                .issuedAt(Date.from(now()))
-                .expiration(Date.from(now().plus(expiration, ChronoUnit.HOURS)))
-                .signWith(key()).compact();
+        return createToken(username, authorities);
     }
 
     public Jws<Claims> claims(String token) {
@@ -76,7 +79,10 @@ public class JwtGenerator {
         try {
             Jws<Claims> claims = claims(token);
             Date tokenExpiration = claims.getPayload().getExpiration();
-            return tokenExpiration.before(new Date()) && claims.getPayload().getSubject().equals(userDetails.getUsername());
+            if (tokenExpiration.before(new Date())) {
+                return false;
+            }
+            return claims.getPayload().getSubject().equals(userDetails.getUsername());
         } catch (JwtException exception) {
             log.error("Invalid JWT token: {}", exception.getMessage());
         }
