@@ -1,0 +1,14 @@
+package cn.master.backend.service;
+
+import com.mybatisflex.core.service.IService;
+import cn.master.backend.entity.User;
+
+/**
+ * 用户 服务层。
+ *
+ * @author 11's papa
+ * @since 1.0.0 2024-08-06
+ */
+public interface UserService extends IService<User> {
+
+}

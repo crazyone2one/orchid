@@ -1,18 +1,29 @@
 server:
   port: 8080
 spring:
+  session:
+    timeout: 43200s
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/matrix
+    url: jdbc:mysql://localhost:3306/orchid?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
     username: root
     password: admin
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 60000
+      maximum-pool-size: 100
+      minimum-idle: 10
+      idle-timeout: 300000
       max-lifetime: 1800000
       connection-timeout: 30000
+      auto-commit: true
+      connection-test-query: SELECT 1
+      pool-name: DatebookHikariCP
+  messages:
+    basename: i18n/commons,i18n/api,i18n/bug,i18n/case,i18n/plan,i18n/project,i18n/system
 logging:
   level:
     web: debug
