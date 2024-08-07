@@ -30,3 +30,6 @@ logging:
 mybatis-flex:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+springdoc:
+  api-docs:
+    enabled: true
