@@ -1,11 +1,9 @@
 package cn.master.backend.security;
 
-import cn.master.backend.service.UserRolePermissionService;
+import cn.master.backend.service.BaseUserRolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,8 +28,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final UserRolePermissionService userRolePermissionService;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final BaseUserRolePermissionService baseUserRolePermissionService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,7 +44,7 @@ public class SecurityConfig {
         });
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authenticationProvider(authenticationProvider());
-        http.exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint));
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
@@ -77,10 +75,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-        expressionHandler.setPermissionEvaluator(new CustomPermissionEvaluator(userRolePermissionService));
-        return expressionHandler;
+    @Bean("auth")
+    public CustomPermissionEvaluator customPermissionEvaluator() {
+        return new CustomPermissionEvaluator(baseUserRolePermissionService);
     }
 }

@@ -1,6 +1,7 @@
 package cn.master.backend.security;
 
 import cn.master.backend.entity.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
  * @author Created by 11's papa on 08/06/2024
  **/
 public class CustomUserDetails implements UserDetails {
+    @Getter
+    private final String id;
     private final String username;
     private final String password;
     Collection<? extends GrantedAuthority> authorities;
@@ -21,7 +24,7 @@ public class CustomUserDetails implements UserDetails {
         this.username = user.getName();
         this.password = user.getPassword();
         this.authorities = roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-        ;
+        this.id = user.getId();
     }
 
     @Override
@@ -38,4 +41,5 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return username;
     }
+
 }
