@@ -45,9 +45,9 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     }
 
     private boolean hasPrivilege(Authentication authentication, String target, String permission) {
-        //if ("administrator".equals(authentication.getName())) {
-        //    return true;
-        //}
+        if ("administrator".equals(authentication.getName())) {
+            return true;
+        }
         List<UserRolePermission> rolePermissions = baseUserRolePermissionService.getPermissions(extractRoles(authentication));
         if (rolePermissions.isEmpty()) {
             return false;
@@ -75,16 +75,4 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         return hasPrivilege(authentication, null, authority);
     }
 
-    public boolean hasAnyAuthority(String authorities) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (Objects.isNull(authentication) || StringUtils.isBlank(authorities)) {
-            return false;
-        }
-        for (String authority : authorities.split(",")) {
-            if (StringUtils.isNoneBlank(authority) && hasPrivilege(authentication, null, authority)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

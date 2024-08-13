@@ -18,6 +18,10 @@ public class CustomUserDetails implements UserDetails {
     private final String id;
     private final String username;
     private final String password;
+    @Getter
+    private final String organizationId;
+    @Getter
+    private final String projectId;
     Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user, List<String> roles) {
@@ -25,6 +29,8 @@ public class CustomUserDetails implements UserDetails {
         this.password = user.getPassword();
         this.authorities = roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         this.id = user.getId();
+        this.organizationId = user.getLastOrganizationId();
+        this.projectId = user.getLastProjectId();
     }
 
     @Override
