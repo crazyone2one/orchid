@@ -3,20 +3,20 @@ package cn.master.backend.service.impl;
 import cn.master.backend.constants.UserRoleScope;
 import cn.master.backend.constants.UserRoleType;
 import cn.master.backend.entity.UserRole;
+import cn.master.backend.entity.UserRoleRelation;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.payload.PermissionCache;
+import cn.master.backend.payload.response.user.UserSelectOption;
 import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.BaseUserRoleRelationService;
 import cn.master.backend.service.GlobalUserRoleService;
+import cn.master.backend.util.Translator;
 import lombok.val;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static cn.master.backend.constants.InternalUserRole.MEMBER;
 import static cn.master.backend.entity.table.UserRoleTableDef.USER_ROLE;
@@ -78,6 +78,43 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
         if (!StringUtils.equalsIgnoreCase(userRole.getType(), UserRoleType.SYSTEM.name())) {
             throw new MSException(GLOBAL_USER_ROLE_RELATION_SYSTEM_PERMISSION);
         }
+    }
+
+    @Override
+    public void checkRoleIsGlobalAndHaveMember(List<String> userRoleIdList, boolean isSystem) {
+        long count = queryChain().where(USER_ROLE.ID.in(userRoleIdList))
+                .and(USER_ROLE.TYPE.eq("SYSTEM").when(isSystem))
+                .and(USER_ROLE.SCOPE_ID.eq("GLOBAL").when(!isSystem))
+                .count();
+        if (count != userRoleIdList.size()) {
+            throw new MSException(Translator.get("role.not.global"));
+        }
+    }
+
+    @Override
+    public List<UserRole> selectByUserRoleRelations(List<UserRoleRelation> userRoleRelations) {
+        if (userRoleRelations.isEmpty()) {
+            return List.of();
+        }
+        List<String> userRoleIds = userRoleRelations.stream().map(UserRoleRelation::getRoleId).toList();
+        return queryChain().where(USER_ROLE.ID.in(userRoleIds)).list();
+    }
+
+    @Override
+    public List<UserSelectOption> getGlobalSystemRoleList() {
+        List<UserSelectOption> returnList = new ArrayList<>();
+        List<UserRole> userRoles = queryChain()
+                .where(USER_ROLE.SCOPE_ID.eq(UserRoleScope.GLOBAL).and(USER_ROLE.TYPE.eq(UserRoleType.SYSTEM.name())))
+                .list();
+        userRoles.forEach(userRole -> {
+            UserSelectOption userRoleOption = new UserSelectOption();
+            userRoleOption.setId(userRole.getId());
+            userRoleOption.setName(userRole.getName());
+            userRoleOption.setSelected(StringUtils.equals(userRole.getId(), MEMBER.getValue()));
+            userRoleOption.setCloseable(!StringUtils.equals(userRole.getId(), MEMBER.getValue()));
+            returnList.add(userRoleOption);
+        });
+        return returnList;
     }
 
     private int getInternal(Boolean internal) {

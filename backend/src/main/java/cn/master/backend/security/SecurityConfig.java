@@ -42,7 +42,7 @@ public class SecurityConfig {
             authorize.requestMatchers("/swagger-ui*/**", "/v3/api-docs/**").permitAll();
             authorize.anyRequest().authenticated();
         });
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(session -> session.maximumSessions(1).maxSessionsPreventsLogin(true));
         http.authenticationProvider(authenticationProvider());
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
