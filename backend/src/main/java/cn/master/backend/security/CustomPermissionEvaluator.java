@@ -29,9 +29,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if ((Objects.isNull(authentication)) || Objects.isNull(target) || !(permission instanceof String)) {
             return false;
         }
-        if ("administrator".equals(authentication.getName())) {
-            return true;
-        }
         if (!(target instanceof String)) {
             return false;
         }
@@ -44,13 +41,13 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if (Objects.isNull(authentication) || (Objects.isNull(targetType)) || (targetId == null) || !(permission instanceof String)) {
             return false;
         }
-        if ("administrator".equals(authentication.getName())) {
-            return true;
-        }
         return hasPrivilege(authentication, targetType.toUpperCase(), permission.toString().toUpperCase());
     }
 
     private boolean hasPrivilege(Authentication authentication, String target, String permission) {
+        //if ("administrator".equals(authentication.getName())) {
+        //    return true;
+        //}
         List<UserRolePermission> rolePermissions = baseUserRolePermissionService.getPermissions(extractRoles(authentication));
         if (rolePermissions.isEmpty()) {
             return false;
@@ -75,9 +72,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if (Objects.isNull(authentication) || StringUtils.isBlank(authority)) {
             return false;
         }
-        if ("administrator".equals(authentication.getName())) {
-            return true;
-        }
         return hasPrivilege(authentication, null, authority);
     }
 
@@ -85,9 +79,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (Objects.isNull(authentication) || StringUtils.isBlank(authorities)) {
             return false;
-        }
-        if ("administrator".equals(authentication.getName())) {
-            return true;
         }
         for (String authority : authorities.split(",")) {
             if (StringUtils.isNoneBlank(authority) && hasPrivilege(authentication, null, authority)) {

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.master.backend.entity.UserRolePermission;
-import cn.master.backend.service.UserRolePermissionService;
+import cn.master.backend.service.BaseUserRolePermissionService;
 import org.springframework.web.bind.annotation.RestController;
 import java.io.Serializable;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
 public class UserRolePermissionController {
 
     @Autowired
-    private UserRolePermissionService userRolePermissionService;
+    private BaseUserRolePermissionService baseUserRolePermissionService;
 
     /**
      * 添加用户组权限。
@@ -36,7 +36,7 @@ public class UserRolePermissionController {
      */
     @PostMapping("save")
     public boolean save(@RequestBody UserRolePermission userRolePermission) {
-        return userRolePermissionService.save(userRolePermission);
+        return baseUserRolePermissionService.save(userRolePermission);
     }
 
     /**
@@ -47,7 +47,7 @@ public class UserRolePermissionController {
      */
     @DeleteMapping("remove/{id}")
     public boolean remove(@PathVariable Serializable id) {
-        return userRolePermissionService.removeById(id);
+        return baseUserRolePermissionService.removeById(id);
     }
 
     /**
@@ -58,7 +58,7 @@ public class UserRolePermissionController {
      */
     @PutMapping("update")
     public boolean update(@RequestBody UserRolePermission userRolePermission) {
-        return userRolePermissionService.updateById(userRolePermission);
+        return baseUserRolePermissionService.updateById(userRolePermission);
     }
 
     /**
@@ -68,7 +68,7 @@ public class UserRolePermissionController {
      */
     @GetMapping("list")
     public List<UserRolePermission> list() {
-        return userRolePermissionService.list();
+        return baseUserRolePermissionService.list();
     }
 
     /**
@@ -79,7 +79,7 @@ public class UserRolePermissionController {
      */
     @GetMapping("getInfo/{id}")
     public UserRolePermission getInfo(@PathVariable Serializable id) {
-        return userRolePermissionService.getById(id);
+        return baseUserRolePermissionService.getById(id);
     }
 
     /**
@@ -90,7 +90,7 @@ public class UserRolePermissionController {
      */
     @GetMapping("page")
     public Page<UserRolePermission> page(Page<UserRolePermission> page) {
-        return userRolePermissionService.page(page);
+        return baseUserRolePermissionService.page(page);
     }
 
 }

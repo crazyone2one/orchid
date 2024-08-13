@@ -1,6 +1,8 @@
 package cn.master.backend.controller;
 
+import cn.master.backend.constants.PermissionConstants;
 import cn.master.backend.entity.UserKey;
+import cn.master.backend.handler.annotation.HasAuthorize;
 import cn.master.backend.payload.request.AuthenticationRequest;
 import cn.master.backend.payload.request.RefreshTokenRequest;
 import cn.master.backend.payload.response.AuthenticationResponse;
@@ -39,6 +41,9 @@ public class AuthController {
     }
 
     @GetMapping("/info")
+    //@PreAuthorize("@auth.hasAuthority('ORGANIZATION_MEMBER:READ,ORGANIZATION_MEMBER:READ') and @auth.hasAuthority('x')")
+    @HasAuthorize(value = PermissionConstants.SYSTEM_USER_ROLE_READ)
+    //@HasAnyAuthority(value = {PermissionConstants.SYSTEM_USER_ROLE_READ, PermissionConstants.SYSTEM_USER_READ}, logical = Logical.OR)
     public ResponseEntity<String> getUserInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return ResponseEntity.ok(authentication.getName());

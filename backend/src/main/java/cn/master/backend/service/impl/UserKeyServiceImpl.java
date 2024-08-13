@@ -45,7 +45,7 @@ public class UserKeyServiceImpl extends ServiceImpl<UserKeyMapper, UserKey> impl
                 .enable(true)
                 .refreshToken(Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes()))
                 //.accessToken(accessToken)
-                .expireTime(Date.from(now().plus(2, ChronoUnit.HOURS)).getTime())
+                .expireTime(Date.from(now().plus(1, ChronoUnit.DAYS)).getTime())
                 .forever(false)
                 .roles(roleList)
                 .build();

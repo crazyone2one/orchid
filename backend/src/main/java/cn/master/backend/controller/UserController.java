@@ -1,17 +1,15 @@
 package cn.master.backend.controller;
 
-import com.mybatisflex.core.paginate.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import cn.master.backend.constants.PermissionConstants;
 import cn.master.backend.entity.User;
+import cn.master.backend.handler.annotation.HasAuthorize;
 import cn.master.backend.service.UserService;
-import org.springframework.web.bind.annotation.RestController;
+import com.mybatisflex.core.paginate.Page;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -22,19 +20,16 @@ import java.util.List;
  * @since 1.0.0 2024-08-06
  */
 @RestController
-@RequestMapping("/user")
+@RequiredArgsConstructor
+@Tag(name = "系统设置-系统-用户")
+@RequestMapping("/system/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    /**
-     * 添加用户。
-     *
-     * @param user 用户
-     * @return {@code true} 添加成功，{@code false} 添加失败
-     */
-    @PostMapping("save")
+    @PostMapping("/add")
+    @Operation(summary = "系统设置-系统-用户-添加用户")
+    @HasAuthorize(PermissionConstants.SYSTEM_USER_ADD)
     public boolean save(@RequestBody User user) {
         return userService.save(user);
     }
