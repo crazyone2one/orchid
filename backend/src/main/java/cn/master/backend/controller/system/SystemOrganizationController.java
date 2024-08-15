@@ -1,4 +1,4 @@
-package cn.master.backend.controller;
+package cn.master.backend.controller.system;
 
 import cn.master.backend.constants.PermissionConstants;
 import cn.master.backend.entity.Organization;

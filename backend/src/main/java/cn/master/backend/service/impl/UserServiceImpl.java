@@ -183,6 +183,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return response;
     }
 
+    @Override
+    public List<User> getUserList(String keyword) {
+        return queryChain().where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)))
+                .orderBy(USER.CREATE_TIME.desc()).limit(1000)
+                .list();
+    }
+
     private void checkProcessUserAndThrowException(List<String> userIdList, String operatorId, String operatorName, String exceptionMessage) {
         for (String userId : userIdList) {
             //当前用户或admin不能被操作

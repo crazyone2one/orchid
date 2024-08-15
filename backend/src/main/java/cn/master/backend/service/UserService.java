@@ -14,6 +14,8 @@ import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.User;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 /**
  * 用户 服务层。
  *
@@ -35,4 +37,6 @@ public interface UserService extends IService<User> {
     TableBatchProcessResponse deleteUser(@Valid TableBatchProcessDTO request, String operatorId, String operatorName);
 
     TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String operator);
+
+    List<User> getUserList(String keyword);
 }

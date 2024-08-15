@@ -1,4 +1,4 @@
-package cn.master.backend.controller;
+package cn.master.backend.controller.system;
 
 import cn.master.backend.entity.UserRole;
 import cn.master.backend.payload.dto.system.request.UserRoleUpdateRequest;

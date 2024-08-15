@@ -1,4 +1,4 @@
-package cn.master.backend.controller;
+package cn.master.backend.controller.system;
 
 import com.mybatisflex.core.paginate.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
