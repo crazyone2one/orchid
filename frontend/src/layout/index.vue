@@ -6,7 +6,7 @@ import {
   NLayoutFooter,
   NLayoutHeader,
   NLayoutSider,
-  NMenu,
+  NMenu, NButton
 } from "naive-ui";
 import {ref} from "vue";
 
@@ -30,6 +30,13 @@ const menuOptions = [
 ];
 const inverted = ref(false);
 const {height} = useWindowSize();
+const loading = ref(false);
+const handleLoading = () => {
+  loading.value = true
+  // setTimeout(() => {
+  //   loading.value = false
+  // }, 3000)
+}
 </script>
 <template>
   <n-layout :style="{ height: height + 'px' }">
@@ -53,7 +60,8 @@ const {height} = useWindowSize();
             :options="menuOptions"
         />
       </n-layout-sider>
-      <n-layout content-style="padding: 24px;" :native-scrollbar="false">
+      <n-layout v-o-loading="loading" content-style="padding: 24px;" :native-scrollbar="false">
+        <n-button @click="handleLoading">test loading</n-button>
         <n-h2>平山道</n-h2>
         <n-h2>平山道</n-h2>
         <n-h2>平山道</n-h2>

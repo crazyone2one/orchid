@@ -12,8 +12,8 @@ importers:
         specifier: ^10.11.0
         version: 10.11.0(vue@3.4.34(typescript@5.5.4))
       alova:
-        specifier: ^3.0.5
-        version: 3.0.5
+        specifier: ^3.0.10
+        version: 3.0.10
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
@@ -693,8 +693,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  alova@3.0.5:
-    resolution: {integrity: sha512-cOE2nTPOp7sXLhf9cthdh90lT389C1akgJULMytuFeV1loriJr1YbT3LCw3qb/P3N+o/QtJ9WLH2ccr0vJ380A==}
+  alova@3.0.10:
+    resolution: {integrity: sha512-nYt3Xv+huzsekOsIkJNtR7R1Rkhz2gpuNAHjkbRtDWtV6RGyV6sA3T+Uy4MKvkJ4YBID6hGQoOuZeteUCNG5Ug==}
     engines: {node: '>= 18.0.0'}
 
   ansi-styles@3.2.1:
@@ -2021,7 +2021,7 @@ snapshots:
 
   acorn@8.12.1: {}
 
-  alova@3.0.5:
+  alova@3.0.10:
     dependencies:
       '@alova/shared': 1.0.4
       rate-limiter-flexible: 5.0.3
