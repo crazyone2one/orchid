@@ -1,0 +1,78 @@
+package cn.master.backend.handler.uid;
+
+import lombok.Getter;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.springframework.util.Assert;
+
+/**
+ * @author Created by 11's papa on 08/16/2024
+ **/
+@Getter
+public class BitsAllocator {
+    /**
+     * Total 64 bits
+     */
+    public static final int TOTAL_BITS = 1 << 6;
+
+    /**
+     * Bits for [sign-> second-> workId-> sequence]
+     * -- GETTER --
+     *  Getters
+
+     */
+    private final int signBits = 1;
+    private final int timestampBits;
+    private final int workerIdBits;
+    private final int sequenceBits;
+
+    /**
+     * Max value for workId & sequence
+     */
+    private final long maxDeltaSeconds;
+    private final long maxWorkerId;
+    private final long maxSequence;
+
+    /**
+     * Shift for timestamp & workerId
+     */
+    private final int timestampShift;
+    private final int workerIdShift;
+
+    /**
+     * Constructor with timestampBits, workerIdBits, sequenceBits<br>
+     * The highest bit used for sign, so <code>63</code> bits for timestampBits, workerIdBits, sequenceBits
+     */
+    public BitsAllocator(int timestampBits, int workerIdBits, int sequenceBits) {
+        // make sure allocated 64 bits
+        int allocateTotalBits = signBits + timestampBits + workerIdBits + sequenceBits;
+        Assert.isTrue(allocateTotalBits == TOTAL_BITS, "allocate not enough 64 bits");
+
+        // initialize bits
+        this.timestampBits = timestampBits;
+        this.workerIdBits = workerIdBits;
+        this.sequenceBits = sequenceBits;
+
+        // initialize max value
+        this.maxDeltaSeconds = ~(-1L << timestampBits);
+        this.maxWorkerId = ~(-1L << workerIdBits);
+        this.maxSequence = ~(-1L << sequenceBits);
+
+        // initialize shift
+        this.timestampShift = workerIdBits + sequenceBits;
+        this.workerIdShift = sequenceBits;
+    }
+
+    /**
+     * Allocate bits for UID according to delta seconds & workerId & sequence<br>
+     * <b>Note that: </b>The highest bit will always be 0 for sign
+     */
+    public long allocate(long deltaSeconds, long workerId, long sequence) {
+        return (deltaSeconds << timestampShift) | (workerId << workerIdShift) | sequence;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+    }
+}
