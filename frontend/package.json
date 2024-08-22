@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.11.0",
-    "alova": "^3.0.5",
+    "alova": "^3.0.10",
     "mitt": "^3.0.1",
     "pinia": "^2.2.0",
     "pinia-plugin-persistedstate": "^3.2.1",
