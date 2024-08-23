@@ -1,10 +1,16 @@
 import {defineStore} from "pinia";
+import {RouteRecordRaw} from "vue-router";
+import {AppState} from "/@/store/modules/app/types.ts";
+import {cloneDeep} from "lodash-es";
 
 const useAppStore = defineStore('app', {
-    state: () => {
+    state: (): AppState => {
         return {
             currentOrgId: '',
             currentProjectId: '',
+            currentMenuConfig: [],
+            topMenus: [] as RouteRecordRaw[],
+            currentTopMenu: {} as RouteRecordRaw,
         }
     },
     getters: {
@@ -27,6 +33,21 @@ const useAppStore = defineStore('app', {
          */
         setCurrentProjectId(id: string) {
             this.currentProjectId = id;
+        },
+        getTopMenus(): RouteRecordRaw[] {
+            return this.topMenus;
+        },
+        setTopMenus(menus: RouteRecordRaw[] | undefined) {
+            this.topMenus = menus ? [...menus] : [];
+        },
+        getCurrentTopMenu(): RouteRecordRaw {
+            return this.currentTopMenu;
+        },
+        /**
+         * 设置激活的顶部菜单
+         */
+        setCurrentTopMenu(menu: RouteRecordRaw) {
+            this.currentTopMenu = cloneDeep(menu);
         },
     },
     persist: {

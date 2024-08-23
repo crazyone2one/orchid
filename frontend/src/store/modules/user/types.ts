@@ -16,13 +16,13 @@ export interface UserState {
     registrationDate?: string;
     id?: string;
     certification?: number;
-    role: RoleType;
+    role?: RoleType;
     lastOrganizationId?: string;
     lastProjectId?: string;
     userRolePermissions?: UserRolePermissions[];
     userRoles?: UserRole[];
     userRoleRelations?: UserRoleRelation[];
-    loginType: string[];
+    loginType?: string[];
     hasLocalExec?: boolean; // 是否配置了api本地执行
     isPriorityLocalExec?: boolean; // 是否优先本地执行
     localExecuteUrl?: string;

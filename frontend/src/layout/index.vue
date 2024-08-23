@@ -1,79 +1,19 @@
 <script setup lang="ts">
 import {useWindowSize} from "@vueuse/core";
-import {
-  NH2,
-  NLayout,
-  NLayoutFooter,
-  NLayoutHeader,
-  NLayoutSider,
-  NMenu, NButton
-} from "naive-ui";
-import {ref} from "vue";
+import {NLayout, NLayoutFooter,} from "naive-ui";
+import NavBar from '/@/layout/components/navbar/index.vue'
+import sideBar from '/@/layout/components/sidebar/index.vue'
 
-const menuOptions = [
-  {
-    label: "且听风吟",
-    key: "hear-the-wind-sing",
-  },
-  {
-    label: "1973年的弹珠玩具",
-    key: "pinball-1973",
-
-    disabled: true,
-    children: [
-      {
-        label: "鼠",
-        key: "rat",
-      },
-    ],
-  },
-];
-const inverted = ref(false);
 const {height} = useWindowSize();
-const loading = ref(false);
-const handleLoading = () => {
-  loading.value = true
-  // setTimeout(() => {
-  //   loading.value = false
-  // }, 3000)
-}
+
 </script>
 <template>
   <n-layout :style="{ height: height + 'px' }">
-    <n-layout-header style="height: 64px; padding: 24px" bordered>
-      颐和园路
-    </n-layout-header>
+    <nav-bar/>
     <n-layout position="absolute" style="top: 64px; bottom: 64px" has-sider>
-      <n-layout-sider
-          content-style="padding: 24px;"
-          show-trigger
-          collapse-mode="width"
-          :collapsed-width="64"
-          :width="240"
-          :native-scrollbar="false"
-          bordered
-      >
-        <n-menu
-            :inverted="inverted"
-            :collapsed-width="64"
-            :collapsed-icon-size="22"
-            :options="menuOptions"
-        />
-      </n-layout-sider>
-      <n-layout v-o-loading="loading" content-style="padding: 24px;" :native-scrollbar="false">
-        <n-button @click="handleLoading">test loading</n-button>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
-        <n-h2>平山道</n-h2>
+      <side-bar/>
+      <n-layout content-style="padding: 24px;" :native-scrollbar="false">
+        <router-view/>
       </n-layout>
     </n-layout>
     <n-layout-footer

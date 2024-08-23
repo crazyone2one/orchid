@@ -3,6 +3,7 @@ package cn.master.backend.controller;
 import cn.master.backend.constants.PermissionConstants;
 import cn.master.backend.entity.UserKey;
 import cn.master.backend.handler.annotation.HasAuthorize;
+import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.request.AuthenticationRequest;
 import cn.master.backend.payload.request.RefreshTokenRequest;
 import cn.master.backend.payload.response.AuthenticationResponse;
@@ -36,7 +37,7 @@ public class AuthController {
     private final JwtGenerator jwtGenerator;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) {
+    public ResponseEntity<UserDTO> login(@Valid @RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
@@ -63,10 +64,10 @@ public class AuthController {
                 .map(UserKey::getUserId)
                 .map(user -> {
                     String accessToken = jwtGenerator.generateToken(user, authorities);
-                    return AuthenticationResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(request.getRefreshToken())
-                            .build();
+                    AuthenticationResponse response = new AuthenticationResponse();
+                    response.setRefreshToken(response.getRefreshToken());
+                    response.setAccessToken(accessToken);
+                    return response;
                 }).orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!"));
     }
 

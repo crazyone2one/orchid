@@ -1,11 +1,28 @@
 <script setup lang="ts">
 import ProviderView from "./layout/components/ProviderView.vue";
+import {darkTheme, useOsTheme} from "naive-ui";
+import {computed} from "vue";
+
+const osTheme = useOsTheme();
+const theme = computed(() => (osTheme.value === "dark" ? darkTheme : null));
 </script>
 
 <template>
-  <provider-view>
-    <router-view></router-view>
-  </provider-view>
+  <n-config-provider :theme="theme">
+    <n-global-style/>
+    <n-loading-bar-provider>
+      <n-message-provider>
+        <n-dialog-provider>
+          <n-notification-provider>
+            <n-modal-provider>
+              <slot/>
+              <provider-view/>
+            </n-modal-provider>
+          </n-notification-provider>
+        </n-dialog-provider>
+      </n-message-provider>
+    </n-loading-bar-provider>
+  </n-config-provider>
 </template>
 
 <style scoped>
@@ -15,9 +32,11 @@ import ProviderView from "./layout/components/ProviderView.vue";
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }

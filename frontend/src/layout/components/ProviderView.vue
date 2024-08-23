@@ -1,11 +1,23 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
-    <slot />
-  </n-config-provider>
+  <router-view />
 </template>
 
 <script setup lang="ts">
-import { dateZhCN, NConfigProvider, zhCN } from "naive-ui";
+import {
+  useDialog,
+  useLoadingBar,
+  useMessage,
+  useNotification,
+} from "naive-ui";
+import router from "/@/router";
+const loadingBar = useLoadingBar();
+
+router.beforeEach(() => loadingBar?.start());
+
+router.afterEach(() => loadingBar?.finish());
+window.$message = useMessage();
+window.$dialog = useDialog();
+window.$notification = useNotification();
 </script>
 
 <style scoped></style>
