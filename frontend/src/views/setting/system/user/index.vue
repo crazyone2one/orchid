@@ -204,6 +204,7 @@ const handleUserGroupChange = async (val: boolean, record: UserListItem & Record
       await updateUserInfo(params)
       window.$message.success(t('system.user.updateUserSuccess'))
       record.selectUserGroupVisible = false;
+      fetchData()
     }
   } catch (error) {
     console.log(error);
