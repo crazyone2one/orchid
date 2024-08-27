@@ -65,7 +65,7 @@ public class UserController {
     @Log(type = OperationLogType.DELETE, expression = "#logClass.deleteLog(#request)", logClass = UserLogService.class)
     @HasAuthorize(PermissionConstants.SYSTEM_USER_DELETE)
     public TableBatchProcessResponse deleteUser(@Validated @RequestBody TableBatchProcessDTO request) {
-        return userService.deleteUser(request, SessionUtils.getCurrentUserId(), SessionUtils.getCurrentUser().getUsername());
+        return userService.deleteUser(request, SessionUtils.getCurrentUserId(), SessionUtils.getCurrentUser().getName());
     }
 
     @PostMapping("/update")
@@ -81,7 +81,7 @@ public class UserController {
     @HasAuthorize(PermissionConstants.SYSTEM_USER_UPDATE)
     @Log(type = OperationLogType.UPDATE, expression = "#logClass.batchUpdateEnableLog(#request)", logClass = UserLogService.class)
     public TableBatchProcessResponse updateUserEnable(@Validated @RequestBody UserChangeEnableRequest request) {
-        return userService.updateUserEnable(request, SessionUtils.getCurrentUserId(), SessionUtils.getCurrentUser().getUsername());
+        return userService.updateUserEnable(request, SessionUtils.getCurrentUserId(), SessionUtils.getCurrentUser().getName());
     }
 
     @PostMapping("/reset/password")

@@ -1,10 +1,12 @@
 package cn.master.backend.util;
 
-import cn.master.backend.security.CustomUserDetails;
+import cn.master.backend.entity.User;
+import com.mybatisflex.core.query.QueryChain;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -16,8 +18,9 @@ public class SessionUtils {
     private static final ThreadLocal<String> ORGANIZATION_ID = new ThreadLocal<>();
     private static final ThreadLocal<String> PROJECT_ID = new ThreadLocal<>();
 
-    public static CustomUserDetails getCurrentUser() {
-        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public static User getCurrentUser() {
+        UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return QueryChain.of(User.class).where(User::getName).eq(principal.getUsername()).one();
     }
 
     public static String getCurrentUserId() {
@@ -50,7 +53,7 @@ public class SessionUtils {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        return getCurrentUser().getOrganizationId();
+        return getCurrentUser().getLastOrganizationId();
     }
 
     public static String getCurrentProjectId() {
@@ -65,6 +68,6 @@ public class SessionUtils {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        return getCurrentUser().getProjectId();
+        return getCurrentUser().getLastProjectId();
     }
 }

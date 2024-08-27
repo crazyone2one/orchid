@@ -15,4 +15,4 @@ export const fetchRefreshToken = (param: { refreshToken: string }) => {
     };
     return method;
 };
-export const fetchLogout = () => alovaInstance.Get('/auth/logout')
+export const fetchLogout = () => alovaInstance.Post('/auth/logout')

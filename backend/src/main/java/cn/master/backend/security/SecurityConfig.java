@@ -39,7 +39,7 @@ public class SecurityConfig {
         //http.anonymous(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> {
             authorize.requestMatchers("/auth/login", "/auth/refreshToken").permitAll();
-            authorize.requestMatchers(HttpMethod.GET, "/auth/logout").permitAll();
+            authorize.requestMatchers(HttpMethod.POST, "/auth/logout").permitAll();
             authorize.requestMatchers("/swagger-ui*/**", "/v3/api-docs/**").permitAll();
             authorize.anyRequest().authenticated();
         });

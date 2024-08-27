@@ -2,6 +2,7 @@ import {cloneDeep} from "lodash-es";
 
 export interface TreeNode<T> {
     children?: TreeNode<T>[];
+
     [key: string]: any;
 }
 
@@ -84,5 +85,14 @@ export function mapTree<T>(
             })
             .filter((node: TreeNode<T> | null) => node !== null);
     }
+
     return mapFunc(cloneTree, parentPath, level, parent);
+}
+
+export const characterLimit = (str?: string) => {
+    if (!str) return '';
+    if (str.length <= 20) {
+        return str;
+    }
+    return `${str.slice(0, 20 - 3)}...`;
 }

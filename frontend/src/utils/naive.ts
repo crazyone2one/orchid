@@ -40,17 +40,20 @@ import {
     NP,
     NPopover,
     NRadio,
+    NRadioButton,
     NRadioGroup,
     NResult,
+    NScrollbar,
     NSelect,
     NSpace,
     NSpin,
     NSplit,
+    NSwitch,
     NTabPane,
     NTabs,
     NTag,
     NText,
-    NTooltip, NSwitch, NRadioButton
+    NTooltip
 } from "naive-ui";
 
 export default create({
@@ -94,6 +97,6 @@ export default create({
         NNotificationProvider,
         NModalProvider,
         NFlex, NSplit, NSelect, NSpin, NRadioGroup, NRadio, NRadioButton, NDataTable, NFormItem, NDivider, NCheckbox, NModal, NTag, NCheckboxGroup,
-        NSwitch
+        NSwitch, NScrollbar
     ],
 });
