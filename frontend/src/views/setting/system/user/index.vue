@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import OCard from '/@/components/o-card/index.vue'
-import {SimpleUserInfo, SystemRole, UpdateUserInfoParams, UserListItem} from "/@/models/setting/user.ts";
+import {
+  SimpleUserInfo,
+  SystemRole,
+  UpdateUserInfoParams,
+  UserListItem,
+  UserRoleListItem
+} from "/@/models/setting/user.ts";
 import {computed, h, onBeforeMount, Ref, ref, resolveDirective, withDirectives} from "vue";
 import {BatchActionQueryParams, TableQueryParams} from "/@/models/common.ts";
 import {usePagination} from "alova/client";
@@ -150,7 +156,8 @@ const columns: DataTableColumns<UserListItem> = [
               [
                 withDirectives(h(OButton, {
                   text: true,
-                  content: t('system.user.editUser')
+                  content: t('system.user.editUser'),
+                  onClick: () => showUserModal('edit', row)
                 }, {}), [[permission, ['SYSTEM_USER:READ+UPDATE']]]),
                 withDirectives(h(TableMoreAction, {
                   list: tableActions,
@@ -217,6 +224,17 @@ const init = async () => {
 const showUserModal = (mode: UserModalMode, record?: UserListItem) => {
   showModal.value = true;
   userFormMode.value = mode
+  if (mode === 'edit' && record) {
+    userForm.value.list = [
+      {
+        id: record.id,
+        name: record.name,
+        email: record.email,
+        phone: record.phone ? record.phone.replace(/\s/g, '') : record.phone,
+      },
+    ];
+    userForm.value.userGroup = record.userRoleList.map((e: UserRoleListItem) => e.id);
+  }
 }
 const tableActions: DropdownOption[] = [
   {
@@ -395,6 +413,7 @@ const updateUser = async () => {
   };
   await updateUserInfo(params);
   window.$message.success(t('system.user.updateUserSuccess'));
+  showModal.value = false
   fetchData()
 }
 const createUser = async (isContinue?: boolean) => {
@@ -433,7 +452,7 @@ const enableUser = (record?: UserListItem, isBatch?: boolean, params?: BatchActi
           selectAll: !!params?.selectAll,
           excludeIds: params?.excludeIds || [],
           condition: {keyword: keyword.value},
-          enable: false,
+          enable: true,
         });
         window.$message.success(t('system.user.enableUserSuccess'));
         checkedRowKeys.value = []
