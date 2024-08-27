@@ -50,7 +50,7 @@ import {
     NTabs,
     NTag,
     NText,
-    NTooltip, NSwitch
+    NTooltip, NSwitch, NRadioButton
 } from "naive-ui";
 
 export default create({
@@ -93,7 +93,7 @@ export default create({
         NLoadingBarProvider,
         NNotificationProvider,
         NModalProvider,
-        NFlex, NSplit, NSelect, NSpin, NRadioGroup, NRadio, NDataTable, NFormItem, NDivider, NCheckbox, NModal, NTag, NCheckboxGroup,
+        NFlex, NSplit, NSelect, NSpin, NRadioGroup, NRadio, NRadioButton, NDataTable, NFormItem, NDivider, NCheckbox, NModal, NTag, NCheckboxGroup,
         NSwitch
     ],
 });

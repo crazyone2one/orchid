@@ -7,6 +7,7 @@ import Loading from "/@/components/loading/loading.ts";
 import pinia from "/@/store";
 import {setupI18n} from "/@/i18n";
 import naive from '/@/utils/naive.ts'
+import permission from '/@/directive/permission/index.ts'
 
 const bootstrap = async () => {
     const app = createApp(App);
@@ -23,6 +24,7 @@ const bootstrap = async () => {
     //     const { changeLocale } = useLocale();
     //     changeLocale(defaultLocale);
     // }
+    app.directive('permission', permission)
     app.mount("#app");
 }
 

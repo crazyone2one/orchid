@@ -51,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/refreshToken")
-    public AuthenticationResponse refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<AuthenticationResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         Optional<UserKey> token = userKeyService.findByToken(request.getRefreshToken());
         Collection<? extends GrantedAuthority> authorities;
         if (token.isPresent()) {
@@ -59,16 +59,17 @@ public class AuthController {
         } else {
             authorities = List.of();
         }
-        return token
+
+        return ResponseEntity.ok(token
                 .map(userKeyService::verifyExpiration)
                 .map(UserKey::getUserId)
                 .map(user -> {
                     String accessToken = jwtGenerator.generateToken(user, authorities);
                     AuthenticationResponse response = new AuthenticationResponse();
-                    response.setRefreshToken(response.getRefreshToken());
+                    response.setRefreshToken(token.get().getRefreshToken());
                     response.setAccessToken(accessToken);
                     return response;
-                }).orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!"));
+                }).orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!")));
     }
 
     @PostMapping("/logout")

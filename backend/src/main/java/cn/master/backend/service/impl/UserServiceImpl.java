@@ -114,12 +114,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             List<String> userIdList = userList.stream().map(User::getId).toList();
             Map<String, UserTableResponse> roleAndOrganizationMap = globalUserRoleRelationService.selectGlobalUserRoleAndOrganization(userIdList);
             for (UserTableResponse user : userList) {
-                UserTableResponse userInfo = new UserTableResponse();
-                BeanUtils.copyProperties(user, userInfo);
+                //UserTableResponse userInfo = new UserTableResponse();
+                //BeanUtils.copyProperties(user, userInfo);
                 UserTableResponse roleOrgModel = roleAndOrganizationMap.get(user.getId());
                 if (roleOrgModel != null) {
-                    userInfo.setUserRoleList(roleOrgModel.getUserRoleList());
-                    userInfo.setOrganizationList(roleOrgModel.getOrganizationList());
+                    user.setUserRoleList(roleOrgModel.getUserRoleList());
+                    user.setOrganizationList(roleOrgModel.getOrganizationList());
                 }
             }
         }

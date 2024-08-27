@@ -53,16 +53,6 @@ const menuOptions: MenuOption[] = [
     label: () => h(RouterLink, {to: {name: CaseManagementRouteEnum.CASE_MANAGEMENT}}, {default: () => t('menu.caseManagement')}),
     key: CaseManagementRouteEnum.CASE_MANAGEMENT,
     icon: renderIcon('i-carbon-rule-test'),
-    // children: [
-    //   {
-    //     label: t('menu.caseManagementShort'),
-    //     key: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE,
-    //   },
-    //   {
-    //     label: t('menu.caseManagement.caseManagementReviewShort'),
-    //     key: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW,
-    //   }
-    // ]
   },
   {
     label: () => h(RouterLink, {to: {name: BugManagementRouteEnum.BUG_MANAGEMENT}}, {default: () => t('menu.bugManagement')}),
@@ -75,73 +65,14 @@ const menuOptions: MenuOption[] = [
     icon: renderIcon('i-carbon-settings-services'),
     children: [
       {
-        type: 'group',
-        label: t('menu.settings.system'),
+        // label: t('menu.settings.system'),
+        label: () => h(RouterLink, {to: {name: SettingRouteEnum.SETTING_SYSTEM}}, {default: () => t('menu.settings.system')}),
         key: SettingRouteEnum.SETTING_SYSTEM,
-        children: [
-          {
-            // label: t('menu.settings.system.user'),
-            label: () => h(RouterLink, {to: {name: SettingRouteEnum.SETTING_SYSTEM_USER_SINGLE}}, {default: () => t('menu.settings.system.user')}),
-            key: SettingRouteEnum.SETTING_SYSTEM_USER_SINGLE,
-          },
-          {
-            label: t('menu.settings.system.usergroup'),
-            key: SettingRouteEnum.SETTING_SYSTEM_USER_GROUP,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.system.organizationAndProject'),
-            key: SettingRouteEnum.SETTING_SYSTEM_ORGANIZATION,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.system.parameter'),
-            key: SettingRouteEnum.SETTING_SYSTEM_PARAMETER,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.system.resourcePool'),
-            key: SettingRouteEnum.SETTING_SYSTEM_RESOURCE_POOL,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.system.log'),
-            key: SettingRouteEnum.SETTING_SYSTEM_LOG,
-            disabled: true
-          },
-        ]
       },
       {
-        type: 'group',
-        label: t('menu.settings.organization'),
+        // label: t('menu.settings.organization'),
+        label: () => h(RouterLink, {to: {name: SettingRouteEnum.SETTING_ORGANIZATION}}, {default: () => t('menu.settings.organization')}),
         key: SettingRouteEnum.SETTING_ORGANIZATION,
-        children: [
-          {
-            // label: t('menu.settings.organization.member'),
-            label: () => h(RouterLink, {to: {name: SettingRouteEnum.SETTING_ORGANIZATION_MEMBER}}, {default: () => t('menu.settings.organization.member')}),
-            key: SettingRouteEnum.SETTING_ORGANIZATION_MEMBER,
-          },
-          {
-            label: t('menu.settings.organization.userGroup'),
-            key: SettingRouteEnum.SETTING_ORGANIZATION_USER_GROUP,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.organization.project'),
-            key: SettingRouteEnum.SETTING_ORGANIZATION_PROJECT,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.organization.template'),
-            key: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
-            disabled: true
-          },
-          {
-            label: t('menu.settings.organization.log'),
-            key: SettingRouteEnum.SETTING_ORGANIZATION_LOG,
-            disabled: true
-          },
-        ]
       },
     ],
   },

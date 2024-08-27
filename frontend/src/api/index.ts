@@ -3,6 +3,7 @@ import {createServerTokenAuthentication} from "alova/client";
 import fetchAdapter from "alova/fetch";
 import vueHook from "alova/vue";
 import {fetchRefreshToken} from "/@/api/modules/login";
+import useUser from "/@/hooks/use-user.ts";
 
 const {onAuthRequired, onResponseRefreshToken} =
     createServerTokenAuthentication({
@@ -24,7 +25,9 @@ const {onAuthRequired, onResponseRefreshToken} =
                     localStorage.setItem("refresh_token", refresh_token);
                 } catch (error) {
                     // token刷新失败，跳转回登录页
-                    location.href = "/login";
+                    // location.href = "/login";
+                    const { logout } = useUser();
+                    logout()
                     // 并抛出错误
                     throw error;
                 }

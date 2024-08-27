@@ -8,7 +8,6 @@ import {cloneDeep} from "lodash-es";
 import usePermission from "/@/hooks/use-permission.ts";
 import type {MenuOption} from "naive-ui";
 import {useI18n} from "vue-i18n";
-import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
 
 const {t} = useI18n()
 const appStore = useAppStore()
@@ -79,6 +78,8 @@ listenerRouteChange(newRoute => {
 watch(() => appStore.getCurrentTopMenu().name, (value) => {
   checkAuthMenu();
   activeKey.value = value;
+},{
+  immediate: true,
 })
 </script>
 

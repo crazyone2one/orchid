@@ -9,6 +9,7 @@ import cn.master.backend.mapper.OrganizationMapper;
 import cn.master.backend.mapper.UserRoleRelationMapper;
 import cn.master.backend.payload.dto.system.LogDTO;
 import cn.master.backend.payload.dto.system.OptionDTO;
+import cn.master.backend.payload.dto.system.OrganizationCountDTO;
 import cn.master.backend.payload.dto.system.OrganizationDTO;
 import cn.master.backend.payload.dto.system.request.OrganizationRequest;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
@@ -21,9 +22,7 @@ import cn.master.backend.util.SessionUtils;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
-import com.mybatisflex.core.query.QueryChain;
-import com.mybatisflex.core.query.QueryWrapper;
-import com.mybatisflex.core.query.SelectQueryTable;
+import com.mybatisflex.core.query.*;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotEmpty;
@@ -40,6 +39,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.OrganizationTableDef.ORGANIZATION;
+import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.backend.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
 import static cn.master.backend.entity.table.UserTableDef.USER;
 
@@ -74,7 +74,32 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
         if (page.getRecords().isEmpty()) {
             return new Page<>();
         }
+        buildExtraInfo(page.getRecords(), "");
         return page;
+    }
+
+    private void buildExtraInfo(List<OrganizationDTO> organizations, String currentUser) {
+        List<String> ids = organizations.stream().map(OrganizationDTO::getId).toList();
+        QueryWrapper membersGroup = new QueryWrapper()
+                .select(USER_ROLE_RELATION.SOURCE_ID, QueryMethods.count(QueryMethods.distinct(USER.ID)).as("membercount"))
+                .from(USER_ROLE_RELATION)
+                .join(USER).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID))
+                .where(USER_ROLE_RELATION.SOURCE_ID.in(ids)).groupBy(USER_ROLE_RELATION.SOURCE_ID);
+        QueryWrapper projectsGroup = new QueryWrapper()
+                .select(PROJECT.ORGANIZATION_ID, QueryMethods.count(PROJECT.ID).as("projectcount"))
+                .from(PROJECT).where(PROJECT.ORGANIZATION_ID.in(ids)).groupBy(PROJECT.ORGANIZATION_ID);
+        List<OrganizationCountDTO> orgCountList = queryChain()
+                .select(ORGANIZATION.ID)
+                .select("coalesce(membercount, 0) as memberCount", "coalesce(projectcount, 0) as projectCount")
+                .from(ORGANIZATION.as("o"))
+                .leftJoin(new SelectQueryTable(membersGroup).as("members_group")).on("o.id = members_group.source_id")
+                .leftJoin(new SelectQueryTable(projectsGroup).as("projects_group")).on("o.id = projects_group.organization_id")
+                .listAs(OrganizationCountDTO.class);
+        Map<String, OrganizationCountDTO> orgCountMap = orgCountList.stream().collect(Collectors.toMap(OrganizationCountDTO::getId, count -> count));
+        organizations.forEach(organization -> {
+            organization.setProjectCount(orgCountMap.get(organization.getId()).getProjectCount());
+            organization.setMemberCount(orgCountMap.get(organization.getId()).getMemberCount());
+        });
     }
 
     @Override

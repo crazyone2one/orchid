@@ -68,6 +68,26 @@ const Setting: AppRouteRecordRaw = {
                         isTopMenu: true,
                     },
                 },
+                {
+                    path: 'usergroup',
+                    name: SettingRouteEnum.SETTING_SYSTEM_USER_GROUP,
+                    component: () => import('/@/views/setting/system/usergroup/index.vue'),
+                    meta: {
+                        locale: 'menu.settings.system.usergroup',
+                        roles: ['SYSTEM_USER_ROLE:READ'],
+                        isTopMenu: true,
+                    },
+                },
+                {
+                    path: 'organization-and-project',
+                    name: SettingRouteEnum.SETTING_SYSTEM_ORGANIZATION,
+                    component: () => import('/@/views/setting/system//organizationAndProject/index.vue'),
+                    meta: {
+                        locale: 'menu.settings.system.organizationAndProject',
+                        roles: ['SYSTEM_ORGANIZATION_PROJECT:READ'],
+                        isTopMenu: true,
+                    },
+                },
             ]
         },
         {
@@ -97,6 +117,36 @@ const Setting: AppRouteRecordRaw = {
                     meta: {
                         locale: 'menu.settings.organization.member',
                         roles: ['ORGANIZATION_MEMBER:READ'],
+                        isTopMenu: true,
+                    },
+                },
+                {
+                    path: 'usergroup',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_USER_GROUP,
+                    component: () => import('/@/views/setting/organization/usergroup/index.vue'),
+                    meta: {
+                        locale: 'menu.settings.organization.userGroup',
+                        roles: ['ORGANIZATION_USER_ROLE:READ'],
+                        isTopMenu: true,
+                    },
+                },
+                {
+                    path: 'project',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_PROJECT,
+                    component: () => import('/@/views/setting/organization/project/index.vue'),
+                    meta: {
+                        locale: 'menu.settings.organization.project',
+                        roles: ['ORGANIZATION_PROJECT:READ'],
+                        isTopMenu: true,
+                    },
+                },
+                {
+                    path: 'template',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
+                    component: () => import('/@/views/setting/organization/template/index.vue'),
+                    meta: {
+                        locale: 'menu.settings.organization.template',
+                        roles: ['ORGANIZATION_TEMPLATE:READ'],
                         isTopMenu: true,
                     },
                 },

@@ -12,11 +12,29 @@ const useUserStore = defineStore('main', {
     state: (): UserState => {
         return {
             name: undefined,
+            avatar: undefined,
+            job: undefined,
+            organization: undefined,
+            location: undefined,
+            email: undefined,
+            introduction: undefined,
+            personalWebsite: undefined,
+            jobName: undefined,
+            organizationName: undefined,
+            locationName: undefined,
+            phone: undefined,
+            registrationDate: undefined,
+            id: undefined,
+            certification: undefined,
+            role: '',
             userRolePermissions: [],
             userRoles: [],
             userRoleRelations: [],
+            loginType: [],
+            hasLocalExec: false, // 是否配置了api本地执行
+            isPriorityLocalExec: false, // 是否优先本地执行
+            localExecuteUrl: '',
             lastProjectId: '',
-            lastOrganizationId: '',
         }
     },
     getters: {
