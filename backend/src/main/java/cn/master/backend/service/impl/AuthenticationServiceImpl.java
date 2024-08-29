@@ -7,6 +7,8 @@ import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.dto.user.UserRolePermissionDTO;
 import cn.master.backend.payload.dto.user.UserRoleResourceDTO;
 import cn.master.backend.payload.request.AuthenticationRequest;
+import cn.master.backend.payload.request.RefreshTokenRequest;
+import cn.master.backend.payload.response.AuthenticationResponse;
 import cn.master.backend.security.CustomUserDetails;
 import cn.master.backend.security.JwtGenerator;
 import cn.master.backend.security.UserDetailsServiceImpl;
@@ -14,10 +16,15 @@ import cn.master.backend.service.AuthenticationService;
 import cn.master.backend.service.UserKeyService;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.update.UpdateChain;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,10 +43,12 @@ import java.util.stream.Collectors;
 import static cn.master.backend.entity.table.OrganizationTableDef.ORGANIZATION;
 import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.backend.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
+import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 /**
  * @author Created by 11's papa on 08/06/2024
  **/
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -55,15 +65,74 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
-        String accessToken = jwtGenerator.generateToken(request.getUsername(), userDetailsService.loadUserByUsername(request.getUsername()).getAuthorities());
-        UserKey userKey = userKeyService.createRefreshToken(request.getUsername(), accessToken);
+        String accessToken = jwtGenerator.generateAccessToken(request.getUsername(), userDetailsService.loadUserByUsername(request.getUsername()).getAuthorities());
+        String refreshToken = jwtGenerator.generateRefreshToken(request.getUsername());
         CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+        userKeyService.revokeAllUserTokens(principal);
+        userKeyService.saveUserToken(accessToken, refreshToken, principal);
+        //UserKey userKey = userKeyService.createRefreshToken(request.getUsername(), accessToken);
         UserDTO response = getUserDTO(principal.getId());
         autoSwitch(response);
         response = getUserDTO(principal.getId());
         response.setAccessToken(accessToken);
-        response.setRefreshToken(userKey.getRefreshToken());
+        //response.setRefreshToken(refreshToken);
         return response;
+    }
+
+    @Override
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
+        final String accessToken;
+        final String username;
+        Optional<UserKey> token = userKeyService.findByToken(request.getRefreshToken());
+        AuthenticationResponse response = new AuthenticationResponse();
+
+        token.map(userKeyService::verifyExpiration).orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!"));
+        accessToken = token.get().getAccessToken();
+        username = jwtGenerator.getUsernameFromToken(accessToken);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (jwtGenerator.validateToken(accessToken, userDetails)) {
+            String newAccessToken = jwtGenerator.generateAccessToken(username, userDetails.getAuthorities());
+            userKeyService.revokeAllUserTokens(userDetails);
+            userKeyService.saveUserToken(newAccessToken, "", userDetails);
+            //response.setRefreshToken(request.getRefreshToken());
+            response.setAccessToken(newAccessToken);
+        }
+        return response;
+    }
+
+    @Override
+    public AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        AuthenticationResponse result = new AuthenticationResponse();
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (Objects.isNull(authHeader) || !authHeader.startsWith("Bearer ")) {
+            response.setStatus(SC_UNAUTHORIZED);
+            response.getWriter().write("Missing or invalid Authorization header.");
+            log.error("Missing or invalid Authorization header.");
+        } else {
+            // extract the refresh token
+            try {
+                //log.info("Refreshing token for request {}", request.getHeader("Authorization"));
+                final String accToken = authHeader.substring(7);
+                Optional<UserKey> userKey = userKeyService.findByToken(accToken);
+                String refreshToken = userKey.get().getRefreshToken();
+                String username = jwtGenerator.getUsernameFromToken(refreshToken);
+                if (Objects.nonNull(username)) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if (jwtGenerator.validateToken(refreshToken, userDetails)) {
+                        String accessToken = jwtGenerator.generateAccessToken(username, userDetails.getAuthorities());
+                        log.info("Access token is {}", accessToken);
+                        userKeyService.revokeAllUserTokens(userDetails);
+                        userKeyService.saveUserToken(accessToken, refreshToken, userDetails);
+                        result.setAccessToken(accessToken);
+                        //result.setRefreshToken(refreshToken);
+                    }
+                }
+            } catch (ExpiredJwtException exception) {
+                log.warn("refresh token expired: {}", exception.getMessage());
+                response.sendError(SC_UNAUTHORIZED, "refresh token expired");
+            }
+        }
+        return result;
     }
 
     private UserRolePermissionDTO getUserRolePermission(String userId) {

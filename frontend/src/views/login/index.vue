@@ -35,7 +35,6 @@ const rules = {
   ]
 }
 const handleLogin = (e: MouseEvent) => {
-  window.$message.info('login')
   e.preventDefault()
   loading.value = true
   formRef.value?.validate((errors) => {

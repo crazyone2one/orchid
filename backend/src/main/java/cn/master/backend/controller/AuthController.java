@@ -1,29 +1,20 @@
 package cn.master.backend.controller;
 
-import cn.master.backend.constants.PermissionConstants;
-import cn.master.backend.entity.UserKey;
-import cn.master.backend.handler.annotation.HasAuthorize;
 import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.request.AuthenticationRequest;
 import cn.master.backend.payload.request.RefreshTokenRequest;
 import cn.master.backend.payload.response.AuthenticationResponse;
-import cn.master.backend.security.JwtGenerator;
 import cn.master.backend.service.AuthenticationService;
-import cn.master.backend.service.UserKeyService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.io.IOException;
 
 /**
  * @author Created by 11's papa on 08/06/2024
@@ -33,8 +24,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationService authenticationService;
-    private final UserKeyService userKeyService;
-    private final JwtGenerator jwtGenerator;
 
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@Valid @RequestBody AuthenticationRequest request) {
@@ -43,7 +32,7 @@ public class AuthController {
 
     @GetMapping("/info")
     //@PreAuthorize("@auth.hasAuthority('ORGANIZATION_MEMBER:READ,ORGANIZATION_MEMBER:READ') and @auth.hasAuthority('x')")
-    @HasAuthorize(value = PermissionConstants.SYSTEM_USER_ROLE_READ)
+    //@HasAuthorize(value = PermissionConstants.SYSTEM_USER_ROLE_READ)
     //@HasAnyAuthority(value = {PermissionConstants.SYSTEM_USER_ROLE_READ, PermissionConstants.SYSTEM_USER_READ}, logical = Logical.OR)
     public ResponseEntity<String> getUserInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -51,32 +40,12 @@ public class AuthController {
     }
 
     @PostMapping("/refreshToken")
-    public ResponseEntity<AuthenticationResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        Optional<UserKey> token = userKeyService.findByToken(request.getRefreshToken());
-        Collection<? extends GrantedAuthority> authorities;
-        if (token.isPresent()) {
-            authorities = token.get().getRoles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-        } else {
-            authorities = List.of();
-        }
-
-        return ResponseEntity.ok(token
-                .map(userKeyService::verifyExpiration)
-                .map(UserKey::getUserId)
-                .map(user -> {
-                    String accessToken = jwtGenerator.generateToken(user, authorities);
-                    AuthenticationResponse response = new AuthenticationResponse();
-                    response.setRefreshToken(token.get().getRefreshToken());
-                    response.setAccessToken(accessToken);
-                    return response;
-                }).orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!")));
+    public ResponseEntity<AuthenticationResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        return ResponseEntity.ok(authenticationService.refreshToken(request, response));
     }
 
-    @PostMapping("/logout")
+    //@PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
-        if (Objects.nonNull(request.getRefreshToken())) {
-            userKeyService.deleteRefreshToken(request.getRefreshToken());
-        }
         return ResponseEntity.ok().build();
     }
 }

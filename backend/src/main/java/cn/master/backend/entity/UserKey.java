@@ -66,12 +66,12 @@ public class UserKey implements Serializable {
     /**
      * 状态
      */
-    private Boolean enable;
+    private Boolean revoked;
 
     /**
      * 是否永久有效
      */
-    private Boolean forever;
+    private Boolean expired;
 
     /**
      * 到期时间

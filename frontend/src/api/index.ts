@@ -18,11 +18,10 @@ const {onAuthRequired, onResponseRefreshToken} =
             handler: async (_response, _method) => {
                 try {
                     const {
-                        access_token,
-                        refresh_token
+                        access_token
                     } = await fetchRefreshToken({refreshToken: localStorage.getItem("refresh_token") || ""});
                     localStorage.setItem("access_token", access_token);
-                    localStorage.setItem("refresh_token", refresh_token);
+                    // localStorage.setItem("refresh_token", refresh_token);
                 } catch (error) {
                     // token刷新失败，跳转回登录页
                     // location.href = "/login";

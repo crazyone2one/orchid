@@ -1,10 +1,8 @@
 package cn.master.backend.service;
 
-import cn.master.backend.payload.request.RefreshTokenRequest;
-import cn.master.backend.payload.response.RefreshTokenResponse;
 import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.UserKey;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
 
@@ -21,9 +19,7 @@ public interface UserKeyService extends IService<UserKey> {
 
     Optional<UserKey> findByToken(String token);
 
-    String getRefreshTokenFromCookies(HttpServletRequest request);
+    void revokeAllUserTokens(UserDetails userDetails);
 
-    RefreshTokenResponse generateNewToken(RefreshTokenRequest refreshTokenRequest);
-
-    void deleteRefreshToken(String refreshToken);
+    void saveUserToken(String accessToken, String refreshToken, UserDetails userDetails);
 }
