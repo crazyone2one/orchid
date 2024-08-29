@@ -2,6 +2,7 @@
 
 import {NLayoutHeader} from "naive-ui";
 import TopMenu from '/@/layout/components/top-menu/index.vue'
+import PersonalInfoMenu from '/@/layout/components/personal-info-menu/index.vue'
 import {useAppStore} from "/@/store";
 
 const appStore = useAppStore()
@@ -30,6 +31,9 @@ const options = [
       <n-select v-model:value="appStore.currentProjectId" :options="options"
                 class="mr-[8px] w-[200px]" filterable/>
       <top-menu/>
+    </div>
+    <div class="flex items-center">
+      <personal-info-menu/>
     </div>
   </n-layout-header>
 </template>

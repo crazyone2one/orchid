@@ -101,7 +101,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws Exception {
         AuthenticationResponse result = new AuthenticationResponse();
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (Objects.isNull(authHeader) || !authHeader.startsWith("Bearer ")) {
@@ -129,7 +129,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
             } catch (ExpiredJwtException exception) {
                 log.warn("refresh token expired: {}", exception.getMessage());
-                response.sendError(SC_UNAUTHORIZED, "refresh token expired");
+                throw new ExpiredJwtException(null, null, "refresh token expired");
+                //response.sendError(SC_UNAUTHORIZED, "refresh token expired");
             }
         }
         return result;
