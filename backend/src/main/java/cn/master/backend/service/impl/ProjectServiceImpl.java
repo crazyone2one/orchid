@@ -74,6 +74,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setCreateUser(createUser);
         project.setEnable(request.getEnable());
         project.setDescription(request.getDescription());
+        project.setModuleSetting(request.getModuleIds());
         mapper.insert(project);
         if (CollectionUtils.isNotEmpty(request.getResourcePoolIds())) {
             checkResourcePoolExist(request.getResourcePoolIds());
@@ -116,6 +117,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         //根据projectId分组 key为项目id 值为资源池TestResourcePool
         Map<String, List<ProjectResourcePoolDTO>> poolMap = projectResourcePoolDTOList.stream().collect(Collectors.groupingBy(ProjectResourcePoolDTO::getProjectId));
         projectList.forEach(projectDTO -> {
+            if (CollectionUtils.isNotEmpty(projectDTO.getModuleSetting())) {
+                projectDTO.setModuleIds(projectDTO.getModuleSetting());
+            }
             projectDTO.setMemberCount(projectMap.get(projectDTO.getId()).getMemberCount());
             List<UserExtendDTO> userExtends = userMapList.get(projectDTO.getId());
             if (CollectionUtils.isNotEmpty(userExtends)) {
@@ -146,6 +150,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setOrganizationId(updateProjectDto.getOrganizationId());
         project.setEnable(updateProjectDto.getEnable());
         project.setUpdateUser(updateUser);
+        project.setModuleSetting(updateProjectDto.getModuleIds());
         checkProjectExistByName(project);
         checkProjectNotExist(project.getId());
         BeanUtils.copyProperties(project, projectDTO);

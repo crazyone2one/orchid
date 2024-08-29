@@ -23,6 +23,7 @@ import cn.master.backend.util.SessionUtils;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -187,7 +188,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public List<User> getUserList(String keyword) {
-        return queryChain().where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)))
+        return queryChain()
+                .select(QueryMethods.distinct(USER.ID), USER.EMAIL, USER.NAME).from(USER)
+                .where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)))
                 .orderBy(USER.CREATE_TIME.desc()).limit(1000)
                 .list();
     }

@@ -1,12 +1,40 @@
 <script setup lang="ts">
 import OCard from '/@/components/o-card/index.vue'
-import {ref} from "vue";
+import {nextTick, ref} from "vue";
 import SystemProject from '/@/views/setting/system/organizationAndProject/components/SystemProject.vue';
 import SystemOrganization from '/@/views/setting/system/organizationAndProject/components/SystemOrganization.vue'
+import AddProjectModal from "/@/views/setting/system/organizationAndProject/components/AddProjectModal.vue";
 
 const currentTable = ref('organization');
 const orgTableRef = ref<InstanceType<typeof SystemOrganization> | null>(null)
 const projectTableRef = ref<InstanceType<typeof SystemProject> | null>(null)
+const addProjectModalRef = ref<InstanceType<typeof AddProjectModal> | null>(null)
+
+const handleAddOrganization = () => {
+  if (currentTable.value === 'organization') {
+
+  } else {
+    projectVisible.value = true
+  }
+}
+const projectVisible = ref(false);
+const handleAddProjectCancel = (search: boolean) => {
+  projectVisible.value = false
+  if (search) {
+    tableSearch()
+  }
+}
+const tableSearch = () => {
+  if (currentTable.value === 'organization') {
+    // orgTableRef.value?.tableSearch()
+  } else if (projectTableRef.value) {
+    projectTableRef.value.fetchData();
+  } else {
+    nextTick(() => {
+      projectTableRef.value?.fetchData();
+    });
+  }
+}
 </script>
 
 <template>
@@ -16,6 +44,7 @@ const projectTableRef = ref<InstanceType<typeof SystemProject> | null>(null)
         <n-button v-if="currentTable !== 'organization'"
                   v-permission="['SYSTEM_ORGANIZATION_PROJECT:READ+ADD']"
                   type="primary"
+                  @click="handleAddOrganization"
         >
           {{
             currentTable === 'organization'
@@ -39,6 +68,7 @@ const projectTableRef = ref<InstanceType<typeof SystemProject> | null>(null)
       <system-project v-if="currentTable === 'project'" ref="projectTableRef"/>
     </div>
   </o-card>
+  <add-project-modal ref="addProjectModalRef" :visible="projectVisible" @cancel="handleAddProjectCancel"/>
 </template>
 
 <style scoped>

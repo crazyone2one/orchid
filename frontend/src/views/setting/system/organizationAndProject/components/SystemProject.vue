@@ -6,12 +6,17 @@ import {usePagination} from "alova/client";
 import {enableOrDisableOrg, postProjectTable} from "/@/api/modules/setting/system-org-project.ts";
 import {TableQueryParams} from "/@/models/common.ts";
 import {hasAnyPermission} from "/@/utils/permission.ts";
-import {OrgProjectTableItem} from "/@/models/orgAndProject.ts";
+import {CreateOrUpdateSystemProjectParams, OrgProjectTableItem} from "/@/models/orgAndProject.ts";
 import ShowOrEdit from '/@/components/show-or-edit/index.vue'
 import OButton from '/@/components/o-button/index.vue'
+import AddProjectModal from "/@/views/setting/system/organizationAndProject/components/AddProjectModal.vue";
+import {UserItem} from "/@/models/setting/log.ts";
 
 const {t} = useI18n()
 const permission = resolveDirective('permission')
+const addProjectModalRef = ref<InstanceType<typeof AddProjectModal> | null>(null)
+const addProjectVisible = ref(false);
+const currentUpdateProject = ref<CreateOrUpdateSystemProjectParams>();
 const hasOperationPermission = computed(() =>
     hasAnyPermission([
       'SYSTEM_ORGANIZATION_PROJECT:READ+RECOVER',
@@ -90,7 +95,8 @@ const columns: DataTableColumns<OrgProjectTableItem> = [
         result.push(
             withDirectives(h(OButton, {
               text: true,
-              content: t('common.edit')
+              content: t('common.edit'),
+              onClick: () => showAddProjectModal(row)
             }, {}), [[permission, ['SYSTEM_ORGANIZATION_PROJECT:READ+UPDATE']]])
         )
         if (hasAnyPermission(['SYSTEM_ORGANIZATION_PROJECT:READ+ADD_MEMBER1'])) {
@@ -135,7 +141,26 @@ const {send: fetchData, data} = usePagination(() => postProjectTable(reqParam.va
   data: response => response.records,
   total: response => response.total
 })
-
+const showAddProjectModal = (record: OrgProjectTableItem) => {
+  const {id, name, description, enable, adminList, organizationId, moduleIds, resourcePoolList} = record;
+  addProjectVisible.value = true;
+  currentUpdateProject.value = {
+    id,
+    name,
+    description,
+    enable,
+    userIds: adminList.map((item: UserItem) => item.id),
+    organizationId,
+    moduleIds,
+    resourcePoolIds: resourcePoolList.map((item: { id: string }) => item.id),
+  };
+};
+const handleCancel = (shouldSearch: boolean) => {
+  if (shouldSearch) {
+    fetchData();
+  }
+  addProjectVisible.value = false;
+}
 defineExpose({fetchData})
 onMounted(() => {
   fetchData()
@@ -144,6 +169,10 @@ onMounted(() => {
 
 <template>
   <n-data-table :bordered="false" :columns="columns" :data="data" :row-key="(tmp:OrgProjectTableItem)=>tmp.id"/>
+  <add-project-modal ref="addProjectModalRef"
+                     :visible="addProjectVisible"
+                     :current-project="currentUpdateProject"
+                     @cancel="handleCancel"/>
 </template>
 
 <style scoped>
