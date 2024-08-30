@@ -2,6 +2,7 @@ package cn.master.backend.service.impl;
 
 import cn.master.backend.constants.*;
 import cn.master.backend.entity.Organization;
+import cn.master.backend.entity.Project;
 import cn.master.backend.entity.User;
 import cn.master.backend.entity.UserRoleRelation;
 import cn.master.backend.handler.exception.MSException;
@@ -22,7 +23,10 @@ import cn.master.backend.util.SessionUtils;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
-import com.mybatisflex.core.query.*;
+import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.query.QueryMethods;
+import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.query.SelectQueryTable;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotEmpty;
@@ -34,6 +38,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -279,6 +284,22 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
         QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)
                 .and(USER_ROLE_RELATION.USER_ID.eq(userId)));
         LogicDeleteManager.execWithoutLogicDelete(() -> userRoleRelationMapper.deleteByQuery(queryChain));
+    }
+
+    @Override
+    public Map<String, Long> getTotal(String organizationId) {
+        Map<String, Long> total = new HashMap<>();
+        if (StringUtils.isBlank(organizationId)) {
+            // 统计所有项目
+            total.put("projectTotal", QueryChain.of(Project.class).count());
+            total.put("organizationTotal", mapper.selectCountByQuery(new QueryWrapper()));
+        } else {
+            // 统计组织下的项目
+            //projectExample.createCriteria().andOrganizationIdEqualTo(organizationId);
+            total.put("projectTotal", QueryChain.of(Project.class).where(PROJECT.ORGANIZATION_ID.eq(organizationId)).count());
+            total.put("organizationTotal", 1L);
+        }
+        return total;
     }
 
     private void setLog(String organizationId, String createUser, String type, String content, String path, Object originalValue, Object modifiedValue, List<LogDTO> logs) {

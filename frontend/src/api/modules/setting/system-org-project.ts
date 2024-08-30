@@ -37,4 +37,11 @@ export const enableOrDisableProject = (id: string, isEnable = true) =>
     alovaInstance.Get(`${isEnable ? orgUrl.getEnableProjectUrl : orgUrl.getDisableProjectUrl}${id}`)
 
 
-export const getAdminByOrganizationOrProject = (keyword: string) => alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getAdminByOrgOrProjectUrl}`, {params: {keyword}})
+export const getAdminByOrganizationOrProject = (keyword: string) => alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getAdminByOrgOrProjectUrl}`, {params: {keyword}});
+/**
+ * 获取项目和组织的总数
+ */
+export const getOrgAndProjectCount = () => alovaInstance.Get<{
+    projectTotal: number,
+    organizationTotal: number
+}>(`${orgUrl.getOrgAndProjectCountUrl}`)

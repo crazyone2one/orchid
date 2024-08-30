@@ -5,12 +5,12 @@ import cn.master.backend.entity.Organization;
 import cn.master.backend.handler.annotation.HasAuthorize;
 import cn.master.backend.payload.dto.system.OptionDTO;
 import cn.master.backend.payload.dto.system.OrganizationDTO;
+import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.dto.system.request.OrganizationRequest;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
-import cn.master.backend.payload.request.system.OrganizationEditRequest;
-import cn.master.backend.payload.request.system.OrganizationMemberRequest;
-import cn.master.backend.payload.request.system.OrganizationNameEditRequest;
+import cn.master.backend.payload.request.system.*;
 import cn.master.backend.service.OrganizationService;
+import cn.master.backend.service.SystemProjectService;
 import cn.master.backend.util.SessionUtils;
 import cn.master.backend.validation.Updated;
 import com.mybatisflex.core.paginate.Page;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 组织 控制层。
@@ -41,6 +42,7 @@ import java.util.List;
 public class SystemOrganizationController {
 
     private final OrganizationService organizationService;
+    private final SystemProjectService systemProjectService;
 
     /**
      * 添加组织。
@@ -158,4 +160,20 @@ public class SystemOrganizationController {
     public void removeMember(@PathVariable String organizationId, @PathVariable String userId) {
         organizationService.removeMember(organizationId, userId, SessionUtils.getCurrentUserId());
     }
+
+    @PostMapping("/list-project")
+    @Operation(summary = "系统设置-系统-组织与项目-组织-获取组织下的项目列表")
+    @HasAuthorize(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ)
+    public Page<ProjectDTO> listProject(@Validated @RequestBody OrganizationProjectRequest request) {
+        ProjectRequest projectRequest = new ProjectRequest();
+        BeanUtils.copyProperties(request, projectRequest);
+        return systemProjectService.getProjectPage(projectRequest);
+    }
+    @GetMapping("/total")
+    @Operation(summary = "系统设置-系统-组织与项目-组织-获取组织和项目总数")
+    @HasAuthorize(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ)
+    public Map<String, Long> getTotal(@RequestParam(value = "organizationId",required = false) String organizationId) {
+        return organizationService.getTotal(organizationId);
+    }
+
 }
