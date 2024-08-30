@@ -36,7 +36,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/auth/login",
             "/auth/refreshToken",
-            "/auth/logout"
+            "/auth/logout","/v3/api-docs"
     );
     private static final String BEARER_PREFIX = "Bearer ";
 
