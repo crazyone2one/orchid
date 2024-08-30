@@ -3,7 +3,10 @@ package cn.master.backend.service;
 import cn.master.backend.entity.Project;
 import cn.master.backend.payload.dto.system.OptionDTO;
 import cn.master.backend.payload.dto.system.ProjectDTO;
+import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
+import cn.master.backend.payload.request.project.ProjectSwitchRequest;
+import cn.master.backend.payload.request.project.ProjectUpdateRequest;
 import cn.master.backend.payload.request.system.*;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
@@ -35,12 +38,26 @@ public interface ProjectService extends IService<Project> {
     List<OptionDTO> getTestResourcePoolOptions(ProjectPoolRequest request);
 
     void rename(UpdateProjectNameRequest project, String userId);
+
     Page<ProjectDTO> getProjectPage(ProjectRequest request);
 
     void disable(String id);
+
     void enable(String id);
 
     Page<UserExtendDTO> getProjectMember(ProjectMemberRequest request);
 
     int revoke(String id, String currentUserId);
+
+    List<Project> getUserProject(String organizationId, String currentUserId);
+
+    List<Project> getUserProjectWidthModule(String organizationId, String module, String userId);
+
+    UserDTO switchProject(ProjectSwitchRequest request, String userId);
+
+    ProjectDTO update(ProjectUpdateRequest request, String userId);
+
+    boolean hasPermission(String id, String userId);
+
+    List<UserExtendDTO> getMemberOption(String projectId, String keyword);
 }

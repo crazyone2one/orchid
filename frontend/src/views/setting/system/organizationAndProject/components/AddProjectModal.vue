@@ -8,7 +8,7 @@ import {useI18n} from "vue-i18n";
 import {UserRequestTypeEnum} from "/@/components/o-user-selector/utils.ts";
 import {createOrUpdateProject, getSystemOrgOption} from "/@/api/modules/setting/system-org-project.ts";
 import {useForm} from "alova/client";
-import {useUserStore} from "/@/store";
+import {useAppStore, useUserStore} from "/@/store";
 import {showUpdateOrCreateMessage} from "/@/views/setting/utils.ts";
 
 const showModal = defineModel<boolean>('visible', {
@@ -18,6 +18,7 @@ const props = defineProps<{
   currentProject?: CreateOrUpdateSystemProjectParams;
 }>();
 const userStore = useUserStore()
+const appStore = useAppStore()
 const isEdit = computed(() => !!props.currentProject?.id);
 const emit = defineEmits<{
   (e: 'cancel', shouldSearch: boolean): void;
@@ -47,13 +48,14 @@ const rules =
 
 const handleCancel = (search: boolean) => {
   formRef.value?.restoreValidation()
+  reset()
   emit('cancel', search);
 };
 const initAffiliatedOrgOption = async () => {
   affiliatedOrgOption.value = await getSystemOrgOption();
 }
 const {
-  loading, form, send: submit
+  loading, form, send: submit, reset
 }
     = useForm(
     formData => {
@@ -84,6 +86,7 @@ const handleSubmit = (e: MouseEvent) => {
     submit().then((res) => {
       showUpdateOrCreateMessage(isEdit.value, res.id, res.organizationId);
       handleCancel(true);
+      appStore.initProjectList();
     })
   })
 }

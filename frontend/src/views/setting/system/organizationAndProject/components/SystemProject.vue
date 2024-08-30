@@ -3,7 +3,7 @@ import {computed, h, onMounted, ref, resolveDirective, withDirectives} from "vue
 import {DataTableColumns, NSwitch} from "naive-ui";
 import {useI18n} from "vue-i18n";
 import {usePagination} from "alova/client";
-import {enableOrDisableOrg, postProjectTable} from "/@/api/modules/setting/system-org-project.ts";
+import {enableOrDisableProject, postProjectTable} from "/@/api/modules/setting/system-org-project.ts";
 import {TableQueryParams} from "/@/models/common.ts";
 import {hasAnyPermission} from "/@/utils/permission.ts";
 import {CreateOrUpdateSystemProjectParams, OrgProjectTableItem} from "/@/models/orgAndProject.ts";
@@ -11,6 +11,7 @@ import ShowOrEdit from '/@/components/show-or-edit/index.vue'
 import OButton from '/@/components/o-button/index.vue'
 import AddProjectModal from "/@/views/setting/system/organizationAndProject/components/AddProjectModal.vue";
 import {UserItem} from "/@/models/setting/log.ts";
+import Pagination from '/@/components/o-pagination/index.vue'
 
 const {t} = useI18n()
 const permission = resolveDirective('permission')
@@ -117,7 +118,7 @@ const handleEnableOrDisableOrg = (record: OrgProjectTableItem, value: boolean) =
     negativeText: t('common.cancel'),
     onPositiveClick: async () => {
       try {
-        await enableOrDisableOrg(record.id, value);
+        await enableOrDisableProject(record.id, value);
         window.$message.success(value ? t('common.enableSuccess') : t('common.closeSuccess'))
         await fetchData()
       } catch (e) {
@@ -129,18 +130,24 @@ const handleEnableOrDisableOrg = (record: OrgProjectTableItem, value: boolean) =
 // const data = ref([])
 const reqParam = ref<TableQueryParams>({
   current: 1,
-  pageSize: 6,
+  pageSize: 10,
   keyword: ''
 })
-const {send: fetchData, data} = usePagination(() => postProjectTable(reqParam.value), {
+const {send: fetchData, data, page, pageSize, total} = usePagination((page, pageSize) => {
+  reqParam.value.current = page
+  reqParam.value.pageSize = pageSize
+  return postProjectTable(reqParam.value)
+}, {
   immediate: false,// 请求前的初始数据（接口返回的数据格式）
   initialData: {
     total: 0,
     data: []
   },
   data: response => response.records,
-  total: response => response.total
+  total: response => response.totalRow
 })
+const handleSetPage = (param: number) => page.value = param
+const handleSetPageSize = (param: number) => pageSize.value = param
 const showAddProjectModal = (record: OrgProjectTableItem) => {
   const {id, name, description, enable, adminList, organizationId, moduleIds, resourcePoolList} = record;
   addProjectVisible.value = true;
@@ -168,7 +175,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <n-data-table :bordered="false" :columns="columns" :data="data" :row-key="(tmp:OrgProjectTableItem)=>tmp.id"/>
+  <div>
+    <n-data-table :bordered="false" :columns="columns" :data="data" :row-key="(tmp:OrgProjectTableItem)=>tmp.id"/>
+    <div class="mt-8">
+      <pagination :page-size="pageSize" :page="page" :count="total"
+                  @update-page="handleSetPage"
+                  @update-page-size="handleSetPageSize"/>
+    </div>
+  </div>
   <add-project-modal ref="addProjectModalRef"
                      :visible="addProjectVisible"
                      :current-project="currentUpdateProject"

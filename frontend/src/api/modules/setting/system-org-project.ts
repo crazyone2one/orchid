@@ -28,6 +28,13 @@ export const createOrUpdateProject = (param: Partial<OrgProjectTableItem>) =>
  */
 export const enableOrDisableOrg = (id: string, isEnable = true) =>
     alovaInstance.Get(`${isEnable ? orgUrl.getEnableOrgUrl : orgUrl.getDisableOrgUrl}${id}`)
+/**
+ * 启用或禁用项目
+ * @param id
+ * @param isEnable
+ */
+export const enableOrDisableProject = (id: string, isEnable = true) =>
+    alovaInstance.Get(`${isEnable ? orgUrl.getEnableProjectUrl : orgUrl.getDisableProjectUrl}${id}`)
 
 
 export const getAdminByOrganizationOrProject = (keyword: string) => alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getAdminByOrgOrProjectUrl}`, {params: {keyword}})

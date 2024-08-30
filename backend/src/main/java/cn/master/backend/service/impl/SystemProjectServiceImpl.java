@@ -10,6 +10,7 @@ import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.request.system.AddProjectRequest;
 import cn.master.backend.payload.request.system.ProjectAddMemberBatchRequest;
 import cn.master.backend.payload.request.system.UpdateProjectRequest;
+import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.SystemProjectService;
 import cn.master.backend.util.Translator;
@@ -29,8 +30,9 @@ public class SystemProjectServiceImpl extends ProjectServiceImpl implements Syst
     public SystemProjectServiceImpl(ProjectTestResourcePoolMapper projectTestResourcePoolMapper,
                                     UserRoleRelationMapper userRoleRelationMapper,
                                     OperationLogService operationLogService,
-                                    UserMapper userMapper) {
-        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper);
+                                    UserMapper userMapper,
+                                    BaseUserRolePermissionService baseUserRolePermissionService) {
+        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService);
     }
 
     private final static String PREFIX = "/system/project";

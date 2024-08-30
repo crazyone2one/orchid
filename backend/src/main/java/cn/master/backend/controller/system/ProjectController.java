@@ -1,21 +1,26 @@
 package cn.master.backend.controller.system;
 
-import com.mybatisflex.core.paginate.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import cn.master.backend.constants.OperationLogType;
+import cn.master.backend.constants.PermissionConstants;
 import cn.master.backend.entity.Project;
+import cn.master.backend.handler.annotation.HasAuthorize;
+import cn.master.backend.handler.annotation.Log;
+import cn.master.backend.payload.dto.system.ProjectDTO;
+import cn.master.backend.payload.dto.user.UserDTO;
+import cn.master.backend.payload.dto.user.UserExtendDTO;
+import cn.master.backend.payload.request.project.ProjectSwitchRequest;
+import cn.master.backend.payload.request.project.ProjectUpdateRequest;
 import cn.master.backend.service.ProjectService;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import cn.master.backend.service.log.ProjectLogService;
+import cn.master.backend.util.SessionUtils;
+import cn.master.backend.validation.Updated;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import java.io.Serializable;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -25,82 +30,60 @@ import java.util.List;
  * @since 1.0.0 2024-08-14
  */
 @RestController
-@Tag(name = "项目接口")
+@Tag(name = "项目管理")
 @RequestMapping("/project")
+@RequiredArgsConstructor
 public class ProjectController {
 
-    @Autowired
-    private ProjectService projectService;
+    private final ProjectService projectService;
 
-    /**
-     * 添加项目。
-     *
-     * @param project 项目
-     * @return {@code true} 添加成功，{@code false} 添加失败
-     */
-    @PostMapping("save")
-    @Operation(description="保存项目")
-    public boolean save(@RequestBody @Parameter(description="项目")Project project) {
-        return projectService.save(project);
+    @PostMapping("update")
+    @Operation(description = "项目管理-更新项目")
+    @HasAuthorize(PermissionConstants.PROJECT_BASE_INFO_READ_UPDATE)
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.updateLog(#request)", logClass = ProjectLogService.class)
+    public ProjectDTO update(@RequestBody @Validated({Updated.class}) ProjectUpdateRequest request) {
+
+        return projectService.update(request, SessionUtils.getCurrentUserId());
     }
 
-    /**
-     * 根据主键删除项目。
-     *
-     * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
-     */
-    @DeleteMapping("remove/{id}")
-    @Operation(description="根据主键项目")
-    public boolean remove(@PathVariable @Parameter(description="项目主键")Serializable id) {
-        return projectService.removeById(id);
+    @GetMapping("/list/options/{organizationId}")
+    @Operation(summary = "根据组织ID获取所有有权限的项目")
+    public List<Project> getUserProject(@PathVariable String organizationId) {
+        return projectService.getUserProject(organizationId, SessionUtils.getCurrentUserId());
     }
 
-    /**
-     * 根据主键更新项目。
-     *
-     * @param project 项目
-     * @return {@code true} 更新成功，{@code false} 更新失败
-     */
-    @PutMapping("update")
-    @Operation(description="根据主键更新项目")
-    public boolean update(@RequestBody @Parameter(description="项目主键")Project project) {
-        return projectService.updateById(project);
+    @GetMapping("/list/options/{organizationId}/{module}")
+    @Operation(summary = "根据组织ID获取所有开启某个模块的所有有权限的项目")
+    public List<Project> getUserProjectWidthModule(@PathVariable String organizationId, @PathVariable String module) {
+        return projectService.getUserProjectWidthModule(organizationId, module, SessionUtils.getCurrentUserId());
     }
 
-    /**
-     * 查询所有项目。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    @Operation(description="查询所有项目")
-    public List<Project> list() {
-        return projectService.list();
+    @GetMapping("get/{id}")
+    @Operation(summary = "项目管理-基本信息")
+    @HasAuthorize(PermissionConstants.PROJECT_BASE_INFO_READ)
+    public ProjectDTO getInfo(@PathVariable String id) {
+        return projectService.get(id);
     }
 
-    /**
-     * 根据项目主键获取详细信息。
-     *
-     * @param id 项目主键
-     * @return 项目详情
-     */
-    @GetMapping("getInfo/{id}")
-    @Operation(description="根据主键获取项目")
-    public Project getInfo(@PathVariable Serializable id) {
-        return projectService.getById(id);
+    @PostMapping("/switch")
+    @Operation(summary = "切换项目")
+    @HasAuthorize(PermissionConstants.PROJECT_BASE_INFO_READ)
+    public UserDTO switchProject(@RequestBody ProjectSwitchRequest request) {
+        return projectService.switchProject(request, SessionUtils.getCurrentUserId());
     }
 
-    /**
-     * 分页查询项目。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
-    @GetMapping("page")
-    @Operation(description="分页查询项目")
-    public Page<Project> page(@Parameter(description="分页信息")Page<Project> page) {
-        return projectService.page(page);
+    @GetMapping("/has-permission/{id}")
+    @Operation(summary = "项目管理-获取当前用户是否有当前项目的权限")
+    public boolean hasPermission(@PathVariable String id) {
+        return projectService.hasPermission(id, SessionUtils.getCurrentUserId());
     }
 
+    @GetMapping("/get-member/option/{projectId}")
+    @Operation(summary = "项目管理-获取成员下拉选项")
+    @HasAuthorize(PermissionConstants.PROJECT_BASE_INFO_READ)
+    public List<UserExtendDTO> getMemberOption(@PathVariable String projectId,
+                                               @Schema(description = "查询关键字，根据邮箱和用户名查询")
+                                               @RequestParam(value = "keyword", required = false) String keyword) {
+        return projectService.getMemberOption(projectId, keyword);
+    }
 }

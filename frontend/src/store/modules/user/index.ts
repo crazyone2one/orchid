@@ -98,7 +98,10 @@ const useUserStore = defineStore('main', {
             removeRouteListener();
         }
     },
-    persist: true,
+    // persist: true,
+    persist: {
+        paths: ['name', 'id', 'userRolePermissions', 'userRoleRelations'],
+    },
 })
 
 export default useUserStore

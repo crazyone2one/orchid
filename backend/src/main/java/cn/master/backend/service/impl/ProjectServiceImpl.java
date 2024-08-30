@@ -11,8 +11,13 @@ import cn.master.backend.payload.dto.system.LogDTO;
 import cn.master.backend.payload.dto.system.OptionDTO;
 import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.dto.system.ProjectResourcePoolDTO;
+import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
+import cn.master.backend.payload.dto.user.UserRolePermissionDTO;
+import cn.master.backend.payload.request.project.ProjectSwitchRequest;
+import cn.master.backend.payload.request.project.ProjectUpdateRequest;
 import cn.master.backend.payload.request.system.*;
+import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.ProjectService;
 import cn.master.backend.util.JSON;
@@ -21,8 +26,10 @@ import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.query.SelectQueryTable;
+import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +51,7 @@ import static cn.master.backend.entity.table.ProjectTestResourcePoolTableDef.PRO
 import static cn.master.backend.entity.table.TestResourcePoolOrganizationTableDef.TEST_RESOURCE_POOL_ORGANIZATION;
 import static cn.master.backend.entity.table.TestResourcePoolTableDef.TEST_RESOURCE_POOL;
 import static cn.master.backend.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
+import static cn.master.backend.entity.table.UserRoleTableDef.USER_ROLE;
 import static cn.master.backend.entity.table.UserTableDef.USER;
 
 /**
@@ -59,6 +67,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private final UserRoleRelationMapper userRoleRelationMapper;
     private final OperationLogService operationLogService;
     private final UserMapper userMapper;
+    private final BaseUserRolePermissionService baseUserRolePermissionService;
     public static final Integer DEFAULT_REMAIN_DAY_COUNT = 30;
     public static final String API_TEST = "apiTest";
     public static final String TEST_PLAN = "testPlan";
@@ -395,6 +404,198 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         return 0;
     }
 
+    @Override
+    public List<Project> getUserProject(String organizationId, String currentUserId) {
+        checkOrg(organizationId);
+        User user = userMapper.selectOneById(currentUserId);
+        String projectId;
+        if (Objects.nonNull(user) && StringUtils.isNoneBlank(user.getLastProjectId())) {
+            projectId = user.getLastProjectId();
+        } else {
+            projectId = null;
+        }
+        List<Project> allProject;
+        boolean exists = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(currentUserId)
+                .and(USER_ROLE_RELATION.ROLE_ID.eq(InternalUserRole.ADMIN.name()))).exists();
+        if (exists) {
+            allProject = queryChain().where(PROJECT.ENABLE.eq(true)
+                            .and(PROJECT.ORGANIZATION_ID.eq(organizationId)))
+                    .orderBy(PROJECT.NAME.asc())
+                    .list();
+        } else {
+            allProject = queryChain().select(QueryMethods.distinct(PROJECT.ALL_COLUMNS))
+                    .from(PROJECT)
+                    .join(USER_ROLE_RELATION).on(USER_ROLE_RELATION.SOURCE_ID.eq(PROJECT.ID))
+                    .join(USER_ROLE).on(USER_ROLE_RELATION.ROLE_ID.eq(USER_ROLE.ID))
+                    .join(USER).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID))
+                    .where(USER_ROLE_RELATION.USER_ID.eq(currentUserId)
+                            .and(USER_ROLE.TYPE.eq("PROJECT"))
+                            .and(PROJECT.ORGANIZATION_ID.eq(organizationId)
+                                    .and(PROJECT.ENABLE.eq(true))))
+                    .orderBy(PROJECT.NAME.asc())
+                    .list();
+        }
+        List<Project> temp = allProject;
+        return allProject.stream()
+                .filter(project -> StringUtils.equals(project.getId(), projectId))
+                .findFirst()
+                .map(project -> {
+                    temp.remove(project);
+                    temp.addFirst(project);
+                    return temp;
+                })
+                .orElse(allProject);
+    }
+
+    @Override
+    public List<Project> getUserProjectWidthModule(String organizationId, String module, String userId) {
+        if (StringUtils.isBlank(module)) {
+            throw new MSException(Translator.get("module.name.is.empty"));
+        }
+        String moduleName = null;
+        if (StringUtils.equalsIgnoreCase(module, "API") || StringUtils.equalsIgnoreCase(module, "SCENARIO")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_API_TEST;
+        }
+        if (StringUtils.equalsIgnoreCase(module, "FUNCTIONAL")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_FUNCTIONAL_CASE;
+        }
+        if (StringUtils.equalsIgnoreCase(module, "BUG")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_BUG;
+        }
+        if (StringUtils.equalsIgnoreCase(module, "PERFORMANCE")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_LOAD_TEST;
+        }
+        if (StringUtils.equalsIgnoreCase(module, "UI")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_UI;
+        }
+        if (StringUtils.equalsIgnoreCase(module, "TEST_PLAN")) {
+            moduleName = ProjectMenuConstants.MODULE_MENU_TEST_PLAN;
+        }
+        if (StringUtils.isBlank(moduleName)) {
+            throw new MSException(Translator.get("module.name.is.error"));
+        }
+        checkOrg(organizationId);
+        User user = userMapper.selectOneById(userId);
+        String projectId;
+        if (user != null && StringUtils.isNotBlank(user.getLastProjectId())) {
+            projectId = user.getLastProjectId();
+        } else {
+            projectId = null;
+        }
+        //判断用户是否是系统管理员
+        List<Project> allProject;
+        boolean exists = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(userId)
+                .and(USER_ROLE_RELATION.ROLE_ID.eq(InternalUserRole.ADMIN.name()))).exists();
+        if (exists) {
+            allProject = queryChain().where(PROJECT.ENABLE.eq(true)
+                            .and(PROJECT.ORGANIZATION_ID.eq(organizationId)))
+                    .and(PROJECT.MODULE_SETTING.like(moduleName))
+                    .orderBy(PROJECT.NAME.asc())
+                    .list();
+        } else {
+            allProject = queryChain().select(QueryMethods.distinct(PROJECT.ALL_COLUMNS))
+                    .from(PROJECT)
+                    .join(USER_ROLE_RELATION).on(USER_ROLE_RELATION.SOURCE_ID.eq(PROJECT.ID))
+                    .join(USER_ROLE).on(USER_ROLE_RELATION.ROLE_ID.eq(USER_ROLE.ID))
+                    .join(USER).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID))
+                    .where(USER_ROLE_RELATION.USER_ID.eq(userId)
+                            .and(USER_ROLE.TYPE.eq("PROJECT"))
+                            .and(PROJECT.ORGANIZATION_ID.eq(organizationId)
+                                    .and(PROJECT.ENABLE.eq(true)))
+                            .and(PROJECT.MODULE_SETTING.like(moduleName)))
+                    .orderBy(PROJECT.NAME.asc())
+                    .list();
+        }
+        List<Project> temp = allProject;
+        return allProject.stream()
+                .filter(project -> StringUtils.equals(project.getId(), projectId))
+                .findFirst()
+                .map(project -> {
+                    temp.remove(project);
+                    temp.addFirst(project);
+                    return temp;
+                })
+                .orElse(allProject);
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public UserDTO switchProject(ProjectSwitchRequest request, String userId) {
+        if (!StringUtils.equals(userId, request.getUserId())) {
+            throw new MSException(Translator.get("not_authorized"));
+        }
+        queryChain().where(PROJECT.ID.eq(request.getProjectId())).oneOpt()
+                .orElseThrow(() -> new MSException(Translator.get("project_not_exist")));
+        UpdateChain.of(User.class).set(USER.LAST_PROJECT_ID, request.getProjectId())
+                .where(USER.ID.eq(request.getUserId())).update();
+        UserDTO userDTO = QueryChain.of(User.class).where(USER.ID.eq(request.getUserId())).oneAs(UserDTO.class);
+        UserRolePermissionDTO userRolePermission = baseUserRolePermissionService.getUserRolePermission(request.getUserId());
+        userDTO.setUserRoleRelations(userRolePermission.getUserRoleRelations());
+        userDTO.setUserRoles(userRolePermission.getUserRoles());
+        userDTO.setUserRolePermissions(userRolePermission.getList());
+        return userDTO;
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public ProjectDTO update(ProjectUpdateRequest request, String userId) {
+        Project project = new Project();
+        ProjectDTO projectDTO = new ProjectDTO();
+        project.setId(request.getId());
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        project.setOrganizationId(request.getOrganizationId());
+        project.setEnable(request.getEnable());
+        project.setUpdateUser(userId);
+        checkProjectExistByName(project);
+        checkProjectNotExist(project.getId());
+        BeanUtils.copyProperties(project, projectDTO);
+        mapper.update(project);
+        return projectDTO;
+    }
+
+    @Override
+    public boolean hasPermission(String id, String userId) {
+        boolean hasPermission = true;
+        boolean exists = QueryChain.of(UserRoleRelation.class)
+                .where(USER_ROLE_RELATION.USER_ID.eq(userId).and(USER_ROLE_RELATION.ROLE_ID.eq(InternalUserRole.ADMIN.name()))).exists();
+        if (exists) {
+            return hasPermission;
+        }
+        if (!queryChain().where(PROJECT.ID.eq(id).and(PROJECT.ENABLE.eq(true))).exists()) {
+            return false;
+        }
+        boolean exists1 = QueryChain.of(UserRoleRelation.class)
+                .where(USER_ROLE_RELATION.USER_ID.eq(userId).and(USER_ROLE_RELATION.SOURCE_ID.eq(id))).exists();
+        if (!exists1) {
+            return false;
+        }
+        return hasPermission;
+    }
+
+    @Override
+    public List<UserExtendDTO> getMemberOption(String projectId, String keyword) {
+        Project project = mapper.selectOneById(projectId);
+        if (Objects.nonNull(project)) {
+            return QueryChain.of(User.class)
+                    .select(QueryMethods.distinct(USER.ALL_COLUMNS))
+                    .from(USER_ROLE_RELATION)
+                    .join(USER).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID))
+                    .where(USER.ENABLE.eq(true)
+                            .and(USER_ROLE_RELATION.SOURCE_ID.eq(projectId))
+                            .and(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword))))
+                    .orderBy(USER.NAME.desc()).limit(1000)
+                    .listAs(UserExtendDTO.class);
+        }
+        return List.of();
+    }
+
+    private void checkOrg(String organizationId) {
+        QueryChain.of(Organization.class).where(ORGANIZATION.ID.eq(organizationId))
+                .oneOpt()
+                .orElseThrow(() -> new MSException(Translator.get("organization_not_exist")));
+    }
+
     private List<ProjectResourcePoolDTO> getProjectResourcePoolDTOList(List<String> projectIds) {
         return QueryChain.of(ProjectTestResourcePool.class)
                 .select(PROJECT_TEST_RESOURCE_POOL.PROJECT_ID, TEST_RESOURCE_POOL.ALL_COLUMNS)
@@ -411,7 +612,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 .where(USER_ROLE_RELATION.SOURCE_ID.in(projectIds));
         return queryChain()
                 .select(PROJECT.ID).select("count(distinct temp.id) as memberCount")
-                .from(PROJECT).leftJoin(new SelectQueryTable(sub).as("temp")).on(PROJECT.ID.eq("temp.source_id"))
+                .from(PROJECT.as("p")).leftJoin(new SelectQueryTable(sub).as("temp")).on("p.id = temp.source_id")
                 .groupBy(PROJECT.ID)
                 .listAs(ProjectDTO.class);
     }

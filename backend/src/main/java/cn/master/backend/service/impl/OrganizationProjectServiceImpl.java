@@ -9,10 +9,10 @@ import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.mapper.ProjectTestResourcePoolMapper;
 import cn.master.backend.mapper.UserMapper;
 import cn.master.backend.mapper.UserRoleRelationMapper;
-import cn.master.backend.payload.dto.system.OptionDTO;
 import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
 import cn.master.backend.payload.request.system.*;
+import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.OrganizationProjectService;
 import cn.master.backend.util.Translator;
@@ -46,8 +46,9 @@ public class OrganizationProjectServiceImpl extends ProjectServiceImpl implement
     public OrganizationProjectServiceImpl(ProjectTestResourcePoolMapper projectTestResourcePoolMapper,
                                           UserRoleRelationMapper userRoleRelationMapper,
                                           OperationLogService operationLogService,
-                                          UserMapper userMapper) {
-        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper);
+                                          UserMapper userMapper,
+                                          BaseUserRolePermissionService baseUserRolePermissionService) {
+        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService);
     }
 
 

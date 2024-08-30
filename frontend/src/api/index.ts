@@ -4,6 +4,7 @@ import fetchAdapter from "alova/fetch";
 import vueHook from "alova/vue";
 import {fetchRefreshToken} from "/@/api/modules/login";
 import useUser from "/@/hooks/use-user.ts";
+import {useI18n} from "/@/hooks/use-i18n.ts";
 
 const {onAuthRequired, onResponseRefreshToken} =
     createServerTokenAuthentication({
@@ -25,7 +26,7 @@ const {onAuthRequired, onResponseRefreshToken} =
                 } catch (error) {
                     // token刷新失败，跳转回登录页
                     // location.href = "/login";
-                    const { logout } = useUser();
+                    const {logout} = useUser();
                     logout()
                     // 并抛出错误
                     throw error;
@@ -52,7 +53,27 @@ export const alovaInstance = createAlova({
         // 当使用 `alova/fetch` 请求适配器时，第一个参数接收Response对象
         // 第二个参数为当前请求的method实例，你可以用它同步请求前后的配置信息
         onSuccess: async (response, method) => {
+            const {t} = useI18n();
+            // const json = await response.json();
             if (response.status >= 400) {
+                switch (response.status) {
+                    case 400:
+                        window.$message.error(`${response.statusText}`)
+                        break;
+                    case 401:
+                        window.$message.error(`${response.statusText}` || t('api.errMsg401'))
+                        break;
+                    case 404:
+                        window.$message.error(`${response.statusText}` || t('api.errMsg404'))
+                        break;
+                    case 500:
+                        window.$message.error(t('api.errMsg500'))
+                        break;
+                    case 501:
+                        window.$message.error(`${response.statusText}` || t('api.errMsg501'))
+                        break;
+                    default:
+                }
                 throw new Error(response.statusText);
             }
             const json = await response.json();

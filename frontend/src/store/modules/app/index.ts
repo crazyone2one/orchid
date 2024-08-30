@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import {RouteRecordRaw} from "vue-router";
 import {AppState} from "/@/store/modules/app/types.ts";
 import {cloneDeep} from "lodash-es";
+import {getProjectList} from "/@/api/modules/project-management/project.ts";
 
 const useAppStore = defineStore('app', {
     state: (): AppState => {
@@ -11,6 +12,7 @@ const useAppStore = defineStore('app', {
             currentMenuConfig: [],
             topMenus: [] as RouteRecordRaw[],
             currentTopMenu: {} as RouteRecordRaw,
+            projectList: []
         }
     },
     getters: {
@@ -49,6 +51,17 @@ const useAppStore = defineStore('app', {
         setCurrentTopMenu(menu: RouteRecordRaw) {
             this.currentTopMenu = cloneDeep(menu);
         },
+        async initProjectList() {
+            try {
+                if (this.currentOrgId) {
+                    this.projectList = await getProjectList(this.getCurrentOrgId).send(true);
+                } else {
+                    this.projectList = [];
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
     },
     persist: {
         paths: ['currentOrgId', 'currentProjectId', 'pageConfig', 'menuCollapse'],
