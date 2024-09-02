@@ -13,26 +13,37 @@ export interface MsUserSelectorOption {
   [key: string]: string | number | boolean | undefined;
 }
 
+interface ILoadOptionParams {
+  [key: string]: string | number | boolean | undefined;
+}
+
 interface IProps {
   mode?: 'static' | 'remote'; // 静态模式，远程模式。默认为静态模式，需要传入 options 数据；远程模式需要传入请求函数
   type?: UserRequestTypeEnum; // 加载选项的类型
   placeholder?: string;
   disabledKey?: string; // 禁用的key
+  loadOptionParams?: ILoadOptionParams; // 禁用的key
 }
 
 const props = withDefaults(defineProps<IProps>(), {
   mode: 'static',
   type: UserRequestTypeEnum.SYSTEM_USER_GROUP,
-  disabledKey: 'disabled',
+  disabledKey: 'exclude',
 })
 const currentValue = defineModel<(string | number)[]>('modelValue', {default: []});
 const innerValue = ref<string[]>([]);
 const options = ref<Array<SelectOption>>([])
 const loadList = async () => {
   options.value = []
-  const list = (await initOptionsFunc(props.type, {})) || [];
+  const list = (await initOptionsFunc(props.type, props.loadOptionParams!)) || [];
   if (list) {
-    list.map(item => options.value.push({label: `${item.name}(${item.email})`, value: item.id}))
+    list.map(item => options.value.push(
+        {
+          label: `${item.name}(${item.email})`,
+          value: item.id,
+          disabled: item[props.disabledKey]
+        }
+    ))
   }
   if (currentValue.value.length > 0 && innerValue.value.length === 0) {
     const values: UserListItem[] = [];

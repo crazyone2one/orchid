@@ -9,6 +9,7 @@ import {
 } from "/@/models/setting/user-group.ts";
 import * as ugUrl from '/@/api/req-urls/setting/user-group.ts';
 import {CommonPage, TableQueryParams} from "/@/models/common.ts";
+import {UserListItem} from "/@/models/setting/user.ts";
 
 /**
  * 系统-获取用户组列表
@@ -29,6 +30,18 @@ export const getOrgUserGroupList = (organizationId: string) => {
  */
 export const getProjectUserGroupList = (projectId: string) => {
     return alovaInstance.Get<UserGroupItem[]>(`${ugUrl.getProjectUserGroupU}${projectId}`)
+}
+export const getSystemUserGroupOption = (id: string, keyword: string) => {
+    return alovaInstance.Get<UserListItem[]>(`${ugUrl.getSystemUserGroupOptionUrl}${id}`, {params: {keyword}})
+}
+/**
+ * 组织-获取需要关联的用户选项
+ * @param organizationId
+ * @param roleId
+ * @param keyword
+ */
+export const getOrgUserGroupOption = (organizationId: string, roleId: string, keyword: string) => {
+    return alovaInstance.Get<UserListItem[]>(`${ugUrl.getOrgUserGroupOptionUrl}${organizationId}/${roleId}`, {params: {keyword}})
 }
 /**
  * 系统-创建或修改用户组
@@ -82,4 +95,36 @@ export const saveGlobalUSetting = (param: SaveGlobalUSettingData) => {
  */
 export const saveOrgUSetting = (param: SaveGlobalUSettingData) => {
     return alovaInstance.Post<UserGroupAuthSetting[]>(ugUrl.editOrgUSettingUrl, param)
+}
+/**
+ * 系统-添加用户到用户组
+ * @param param
+ */
+export const addUserToUserGroup = (param: { roleId: string; userIds: string[] }) => {
+    return alovaInstance.Post<string>(ugUrl.addUserToUserGroupUrl, param)
+}
+/**
+ * 组织-添加用户到用户组
+ * @param param
+ */
+export const addOrgUserToUserGroup = (param: { userRoleId: string; userIds: string[]; organizationId: string }) => {
+    return alovaInstance.Post<string>(ugUrl.addOrgUserToUserGroupUrl, param)
+}
+/**
+ * 系统-删除用户组对应的用户
+ * @param id
+ */
+export const deleteUserFromUserGroup = (id: string) => {
+    return alovaInstance.Get<string>(`${ugUrl.deleteUserFromUserGroupUrl}${id}`)
+}
+/**
+ * 组织-删除用户组对应的用户
+ * @param param
+ */
+export const deleteOrgUserFromUserGroup = (param: {
+    userRoleId: string;
+    userIds: string[];
+    organizationId: string
+}) => {
+    return alovaInstance.Post<CommonPage<UserTableItem[]>>(ugUrl.deleteOrgUserFromUserGroupUrl, param)
 }

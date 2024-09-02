@@ -40,6 +40,11 @@ const tableSearch = () => {
 const handleSearch = () => {
   tableSearch()
 }
+const handleAddMember = (id: string) => {
+  if (id === currentUserGroupItem.value.id) {
+    tableSearch();
+  }
+}
 onMounted(() => {
   userGroupLeftRef.value?.initData(router.currentRoute.value.query.id as string, true);
 });
@@ -60,7 +65,8 @@ watchEffect(() => {
       <template #1>
         <user-group-left ref="userGroupLeftRef" :add-permission="['SYSTEM_USER_ROLE:READ+ADD']"
                          :update-permission="['SYSTEM_USER_ROLE:READ+UPDATE']"
-                         :is-global-disable="false" @handle-select="handleSelect">
+                         :is-global-disable="false" @handle-select="handleSelect"
+                         @add-user-success="handleAddMember">
         </user-group-left>
       </template>
       <template #2>

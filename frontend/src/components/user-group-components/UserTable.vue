@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import {computed, inject, ref, watch, watchEffect} from "vue";
+import {computed, h, inject, ref, resolveDirective, watch, watchEffect} from "vue";
 import {AuthScopeEnum} from "/@/enums/common-enum.ts";
 import {useI18n} from "vue-i18n";
 import {useAppStore} from "/@/store";
 import type {DataTableColumns} from "naive-ui";
 import {CurrentUserGroupItem, UserTableItem} from "/@/models/setting/user-group.ts";
-import {usePagination} from "alova/client";
+import {usePagination, useRequest} from "alova/client";
 import {TableQueryParams} from "/@/models/common.ts";
-import {postOrgUserByUserGroup, postUserByUserGroup} from "/@/api/modules/setting/user-group.ts";
+import {
+  deleteOrgUserFromUserGroup,
+  deleteUserFromUserGroup,
+  postOrgUserByUserGroup,
+  postUserByUserGroup
+} from "/@/api/modules/setting/user-group.ts";
 import {hasAnyPermission} from "/@/utils/permission.ts";
 import Pagination from "/@/components/o-pagination/index.vue";
+import RemoveButton from '/@/components/o-remove-button/index.vue'
+import {characterLimit} from "/@/utils";
 
 const systemType = inject<AuthScopeEnum>('systemType');
 const {t} = useI18n();
@@ -22,6 +29,7 @@ const props = defineProps<{
   readPermission?: string[];
   updatePermission?: string[];
 }>();
+const permission = resolveDirective('permission')
 const current = ref<CurrentUserGroupItem>({})
 const columns: DataTableColumns<UserTableItem> = [
   {
@@ -45,7 +53,19 @@ const columns: DataTableColumns<UserTableItem> = [
   {
     title: t('system.userGroup.operation'),
     key: 'operation',
-    fixed: 'right', width: 100
+    fixed: 'right', width: 100,
+    render(row) {
+      // return withDirectives(h(RemoveButton, {
+      //   title: t('system.userGroup.removeName', {name: characterLimit(row.name)}),
+      //   subTitleTip: t('system.userGroup.removeTip'),
+      //   onOk: () => handleRemove(row)
+      // }, {}), [[permission, props.updatePermission || []]])
+      return h(RemoveButton, {
+        title: t('system.userGroup.removeName', {name: characterLimit(row.name)}),
+        subTitleTip: t('system.userGroup.removeTip'),
+        onOk: () => handleRemove(row)
+      }, {})
+    }
   }];
 const reqParam = ref<TableQueryParams>({
   current: 1,
@@ -91,7 +111,25 @@ const fetchData = async () => {
   });
 };
 const handleSetPage = (param: number) => page.value = param
-const handleSetPageSize = (param: number) => pageSize.value = param
+const handleSetPageSize = (param: number) => pageSize.value = param;
+const {send: deleteUg} = useRequest((record) => {
+  if (systemType === AuthScopeEnum.SYSTEM) {
+    return deleteUserFromUserGroup(record.id)
+  } else if (systemType === AuthScopeEnum.ORGANIZATION) {
+    return deleteOrgUserFromUserGroup({
+      organizationId: currentOrgId.value,
+      userRoleId: props.current.id,
+      userIds: [record.id],
+    });
+  }
+}, {immediate: false})
+const handleRemove = (record: UserTableItem) => {
+  handlePermission(props.readPermission || [], async () => {
+    reqParam.value.keyword = props.keyword
+    await deleteUg(record);
+    await fetchData();
+  });
+}
 watch([current, currentOrgId], () => {
   if (systemType === AuthScopeEnum.SYSTEM) {
     reqParam.value.roleId = props.current.id

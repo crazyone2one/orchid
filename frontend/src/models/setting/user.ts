@@ -50,7 +50,8 @@ export interface UserListItem {
     userRoles?: UserRoleListItem[]; // 用户所属用户组
     selectUserGroupVisible?: boolean
     selectUserGroupLoading?: boolean
-    userGroupIds?:[string]
+    userGroupIds?: [string]
+    exclude?: boolean
 }
 
 export interface Filter {

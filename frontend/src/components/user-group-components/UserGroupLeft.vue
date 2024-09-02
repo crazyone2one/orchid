@@ -11,6 +11,7 @@ import {useRequest} from "alova/client";
 import type {DropdownOption} from "naive-ui";
 import MoreAction from '/@/components/o-table-more-action/index.vue'
 import {characterLimit} from "/@/utils";
+import AddUserModal from "/@/components/user-group-components/AddUserModal.vue";
 
 const systemType = inject<AuthScopeEnum>('systemType');
 const appStore = useAppStore()
@@ -25,6 +26,7 @@ const props = defineProps<{
   updatePermission: string[];
   isGlobalDisable: boolean;
 }>();
+const addUserModalRef = ref<InstanceType<typeof AddUserModal> | null>(null);
 const userGroupList = ref<UserGroupItem[]>([]);
 const currentItem = ref<CurrentUserGroupItem>({id: '', name: '', internal: false, type: AuthScopeEnum.SYSTEM});
 const currentId = ref('');
@@ -218,6 +220,12 @@ const handleSelect = (item: DropdownOption, id: string, authScope: AuthScopeEnum
     });
   }
 };
+const handleAddUserCancel = (shouldSearch: boolean) => {
+  userModalVisible.value = false;
+  if (shouldSearch) {
+    emit('addUserSuccess', currentId.value);
+  }
+}
 defineExpose({
   initData,
 });
@@ -429,6 +437,7 @@ defineExpose({
       </Transition>
     </div>
   </div>
+  <add-user-modal ref="addUserModalRef" :visible="userModalVisible" :current-id="currentItem.id" @cancel="handleAddUserCancel"/>
 </template>
 
 <style scoped>
