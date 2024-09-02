@@ -2,6 +2,7 @@ package cn.master.backend.service;
 
 import cn.master.backend.entity.UserRole;
 import cn.master.backend.entity.UserRoleRelation;
+import cn.master.backend.payload.dto.system.PermissionDefinitionItem;
 import cn.master.backend.payload.response.user.UserSelectOption;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -34,4 +35,6 @@ public interface GlobalUserRoleService extends BaseUserRoleService {
     List<UserRole> selectByUserRoleRelations(List<UserRoleRelation> userRoleRelations);
 
     List<UserSelectOption> getGlobalSystemRoleList();
+
+    List<PermissionDefinitionItem> getPermissionSetting(String id);
 }

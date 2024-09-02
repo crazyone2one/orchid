@@ -4,9 +4,13 @@ import cn.master.backend.entity.User;
 import cn.master.backend.payload.dto.system.PermissionDefinitionItem;
 import cn.master.backend.payload.request.system.OrganizationUserRoleMemberRequest;
 import cn.master.backend.payload.request.system.PermissionSettingUpdateRequest;
+import cn.master.backend.validation.Created;
+import cn.master.backend.validation.Updated;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.UserRole;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -37,4 +41,6 @@ public interface BaseUserRoleService extends IService<UserRole> {
     void updatePermissionSetting(PermissionSettingUpdateRequest request);
 
     void checkMemberParam(String userId, String roleId);
+
+    UserRole get(String id);
 }

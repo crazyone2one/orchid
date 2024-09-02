@@ -1,5 +1,7 @@
 package cn.master.backend.controller.system;
 
+import cn.master.backend.constants.PermissionConstants;
+import cn.master.backend.handler.annotation.HasAuthorize;
 import cn.master.backend.payload.dto.system.request.GlobalUserRoleRelationQueryRequest;
 import cn.master.backend.payload.dto.system.request.GlobalUserRoleRelationUpdateRequest;
 import cn.master.backend.payload.dto.user.UserExcludeOptionDTO;
@@ -12,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +34,7 @@ public class GlobalUserRoleRelationController {
     private final GlobalUserRoleRelationService globalUserRoleRelationService;
 
     @PostMapping("/add")
-    @PreAuthorize("hasPermission('SYSTEM_USER_ROLE','READ+UPDATE')")
+    @HasAuthorize(PermissionConstants.SYSTEM_USER_ROLE_UPDATE)
     @Operation(summary = "系统设置-系统-用户组-用户关联关系-创建全局用户组和用户的关联关系")
     public void save(@Validated({Created.class}) @RequestBody GlobalUserRoleRelationUpdateRequest request) {
         request.setCreateUser(SessionUtils.getCurrentUserId());
@@ -41,14 +42,14 @@ public class GlobalUserRoleRelationController {
     }
 
     @GetMapping("/delete/{id}")
-    @PreAuthorize("hasPermission('SYSTEM_USER_ROLE','READ+UPDATE')")
+    @HasAuthorize(PermissionConstants.SYSTEM_USER_ROLE_UPDATE)
     @Operation(summary = "系统设置-系统-用户组-用户关联关系-删除全局用户组和用户的关联关系")
     public void remove(@PathVariable String id) {
         globalUserRoleRelationService.remove(id);
     }
 
     @PostMapping("/list")
-    @PreAuthorize("hasPermission('SYSTEM_USER_ROLE','READ')")
+    @HasAuthorize(PermissionConstants.SYSTEM_USER_ROLE_READ)
     @Operation(summary = "系统设置-系统-用户组-用户关联关系-获取全局用户组对应的用户列表")
     public Page<UserRoleRelationUserDTO> list(@Validated @RequestBody GlobalUserRoleRelationQueryRequest request) {
         return globalUserRoleRelationService.list(request);
@@ -56,7 +57,7 @@ public class GlobalUserRoleRelationController {
 
     @GetMapping("/user/option/{roleId}")
     @Operation(summary = "系统设置-系统-用户组-用户关联关系-获取需要关联的用户选项")
-    @PreAuthorize("hasPermission('SYSTEM_USER_ROLE','READ')")
+    @HasAuthorize(PermissionConstants.SYSTEM_USER_ROLE_READ)
     public List<UserExcludeOptionDTO> getSelectOption(@Schema(description = "用户组ID", requiredMode = Schema.RequiredMode.REQUIRED)
                                                       @PathVariable String roleId,
                                                       @Schema(description = "查询关键字，根据邮箱和用户名查询", requiredMode = Schema.RequiredMode.REQUIRED)

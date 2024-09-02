@@ -6,6 +6,7 @@ import cn.master.backend.entity.UserRole;
 import cn.master.backend.entity.UserRoleRelation;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.payload.PermissionCache;
+import cn.master.backend.payload.dto.system.PermissionDefinitionItem;
 import cn.master.backend.payload.response.user.UserSelectOption;
 import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.BaseUserRoleRelationService;
@@ -115,6 +116,13 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
             returnList.add(userRoleOption);
         });
         return returnList;
+    }
+
+    @Override
+    public List<PermissionDefinitionItem> getPermissionSetting(String id) {
+        UserRole userRole = getWithCheck(id);
+        checkGlobalUserRole(userRole);
+        return getPermissionSetting(userRole);
     }
 
     private int getInternal(Boolean internal) {

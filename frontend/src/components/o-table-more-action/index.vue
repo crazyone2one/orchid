@@ -16,10 +16,12 @@ const handleSelect = (value: string) => {
 
 <template>
   <div>
-    <n-dropdown :trigger="props.trigger || 'hover'" :options="props.list" @select="handleSelect">
+    <n-dropdown :trigger="props.trigger || 'click'" :options="props.list" @select="handleSelect">
       <n-button text>
         <template #icon>
-          <div class="i-carbon-caret-down"/>
+          <n-icon :size="22" class="mt-1">
+            <div class="i-carbon-caret-down"/>
+          </n-icon>
         </template>
       </n-button>
     </n-dropdown>

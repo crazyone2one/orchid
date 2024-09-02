@@ -177,6 +177,11 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         }
     }
 
+    @Override
+    public UserRole get(String id) {
+        return mapper.selectOneById(id);
+    }
+
     private String translateDefaultPermissionName(Permission p) {
         if (StringUtils.isNotBlank(p.getName())) {
             p.getName();

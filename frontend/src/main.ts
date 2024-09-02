@@ -8,6 +8,7 @@ import pinia from "/@/store";
 import {setupI18n} from "/@/i18n";
 import naive from '/@/utils/naive.ts'
 import permission from '/@/directive/permission/index.ts'
+import outerClick from "/@/directive/outer-click";
 
 const bootstrap = async () => {
     const app = createApp(App);
@@ -25,6 +26,7 @@ const bootstrap = async () => {
     //     changeLocale(defaultLocale);
     // }
     app.directive('permission', permission)
+    app.directive('outer', outerClick)
     app.mount("#app");
 }
 
