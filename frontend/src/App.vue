@@ -1,10 +1,24 @@
 <script setup lang="ts">
 import ProviderView from "./layout/components/ProviderView.vue";
 import {darkTheme, useOsTheme} from "naive-ui";
-import {computed} from "vue";
+import {computed, onBeforeMount} from "vue";
+import {useEventListener, useWindowSize} from "@vueuse/core";
+import {useAppStore} from "/@/store";
 
+const appStore = useAppStore()
 const osTheme = useOsTheme();
 const theme = computed(() => (osTheme.value === "dark" ? darkTheme : null));
+
+onBeforeMount(() => {
+  const {height} = useWindowSize();
+  appStore.innerHeight = height.value;
+  appStore.getProjectInfos();
+})
+/** 屏幕大小改变时重新赋值innerHeight */
+useEventListener(window, 'resize', () => {
+  const {height} = useWindowSize();
+  appStore.innerHeight = height.value;
+});
 </script>
 
 <template>

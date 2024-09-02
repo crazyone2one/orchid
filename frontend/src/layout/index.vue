@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import {useWindowSize} from "@vueuse/core";
 import {NLayout, NLayoutFooter,} from "naive-ui";
 import NavBar from '/@/layout/components/navbar/index.vue'
 import sideBar from '/@/layout/components/sidebar/index.vue'
+import {useAppStore} from "/@/store";
 
-const {height} = useWindowSize();
+const appStore = useAppStore()
 
 </script>
 <template>
-  <n-layout :style="{ height: height + 'px' }">
+  <n-layout :style="{ height: appStore.innerHeight + 'px' }">
     <nav-bar/>
     <n-layout position="absolute" style="top: 64px; bottom: 64px" has-sider>
       <side-bar/>

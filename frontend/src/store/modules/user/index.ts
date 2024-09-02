@@ -100,7 +100,7 @@ const useUserStore = defineStore('main', {
     },
     // persist: true,
     persist: {
-        paths: ['name', 'id', 'userRolePermissions', 'userRoleRelations'],
+        paths: ['name', 'id', 'userRolePermissions', 'userRoleRelations', 'lastProjectId'],
     },
 })
 

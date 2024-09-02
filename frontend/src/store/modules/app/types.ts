@@ -8,4 +8,5 @@ export interface AppState {
     currentProjectId: string;
     currentMenuConfig: string[];
     projectList: OrgProjectTableItem[];
+    innerHeight: number;
 }

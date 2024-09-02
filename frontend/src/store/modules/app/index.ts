@@ -3,6 +3,7 @@ import {RouteRecordRaw} from "vue-router";
 import {AppState} from "/@/store/modules/app/types.ts";
 import {cloneDeep} from "lodash-es";
 import {getProjectList} from "/@/api/modules/project-management/project.ts";
+import {getProjectInfo} from "/@/api/modules/project-management/basic-info.ts";
 
 const useAppStore = defineStore('app', {
     state: (): AppState => {
@@ -12,7 +13,8 @@ const useAppStore = defineStore('app', {
             currentMenuConfig: [],
             topMenus: [] as RouteRecordRaw[],
             currentTopMenu: {} as RouteRecordRaw,
-            projectList: []
+            projectList: [],
+            innerHeight: 0,
         }
     },
     getters: {
@@ -61,7 +63,16 @@ const useAppStore = defineStore('app', {
             } catch (error) {
                 console.log(error);
             }
-        }
+        },
+        async getProjectInfos() {
+            const res = await getProjectInfo(this.currentProjectId);
+            if (res) {
+                await this.setCurrentMenuConfig(res?.moduleIds || []);
+            }
+        },
+        async setCurrentMenuConfig(menuConfig: string[]) {
+            this.currentMenuConfig = menuConfig;
+        },
     },
     persist: {
         paths: ['currentOrgId', 'currentProjectId', 'pageConfig', 'menuCollapse'],

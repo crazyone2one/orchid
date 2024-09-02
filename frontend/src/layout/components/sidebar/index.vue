@@ -14,9 +14,10 @@ import {
 import {RouteRecordRaw, RouterLink} from "vue-router";
 import {listenerRouteChange} from "/@/utils/route-listener.ts";
 import useMenuTree from "/@/layout/components/sidebar/use-menu-tree.ts";
+import {useAppStore} from "/@/store";
 
 const {menuTree} = useMenuTree();
-
+const appStore = useAppStore()
 const {t} = useI18n()
 const renderIcon = (icon: string) => {
   return () => h(NIcon, null, {default: () => h('div', {class: icon}, {})})
@@ -38,15 +39,10 @@ const menuOptions: MenuOption[] = [
     ]
   },
   {
-    label: t('menu.testPlan'),
+    // label: t('menu.testPlan'),
+    label: () => h(RouterLink, {to: {name: TestPlanRouteEnum.TEST_PLAN}}, {default: () => t('menu.testPlan')}),
     key: TestPlanRouteEnum.TEST_PLAN,
     icon: renderIcon('i-carbon-research-hinton-plot'),
-    children: [
-      {
-        label: t('menu.apiTest.report'),
-        key: TestPlanRouteEnum.TEST_PLAN_REPORT,
-      }
-    ]
   },
   {
     // label: t('menu.caseManagement'),
@@ -79,6 +75,7 @@ const menuOptions: MenuOption[] = [
 ];
 const expandedKeys = ref<string[]>([]);
 const openKeys = ref<string[]>([]);
+appStore.getProjectInfos();
 const findMenuOpenKeys = (target: string) => {
   const result: string[] = [];
   let isFind = false;
