@@ -4,6 +4,7 @@ import cn.master.backend.constants.*;
 import cn.master.backend.entity.*;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.handler.job.TestPlanScheduleJob;
+import cn.master.backend.handler.uid.IDGenerator;
 import cn.master.backend.mapper.*;
 import cn.master.backend.payload.dto.plan.TestPlanExecuteHisDTO;
 import cn.master.backend.payload.dto.system.LogInsertModule;
@@ -15,10 +16,7 @@ import cn.master.backend.payload.response.plan.TestPlanOperationResponse;
 import cn.master.backend.payload.response.plan.TestPlanStatisticsResponse;
 import cn.master.backend.service.*;
 import cn.master.backend.service.log.TestPlanLogService;
-import cn.master.backend.util.CommonBeanFactory;
-import cn.master.backend.util.NumGenerator;
-import cn.master.backend.util.ServiceUtils;
-import cn.master.backend.util.Translator;
+import cn.master.backend.util.*;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
@@ -121,26 +119,31 @@ public class TestPlanServiceImpl extends BaseTestPlanServiceImpl implements Test
         for (CaseType caseType : CaseType.values()) {
             TestPlanCollection parentCollection = new TestPlanCollection();
             BeanUtils.copyProperties(defaultCollection, parentCollection);
+            //parentCollection.setId(IDGenerator.nextStr());
             parentCollection.setParentId(TestPlanConstants.DEFAULT_PARENT_ID);
             parentCollection.setName(caseType.getType());
             parentCollection.setType(caseType.getKey());
             parentCollection.setPos(initPos << 12);
+            //testPlanCollectionMapper.insert(parentCollection);
             collections.add(parentCollection);
 
-            TestPlanCollection childCollection = new TestPlanCollection();
-            BeanUtils.copyProperties(defaultCollection, childCollection);
-            childCollection.setParentId(parentCollection.getId());
-            childCollection.setName(caseType.getPlanDefaultCollection());
-            childCollection.setType(caseType.getKey());
-            childCollection.setPos(1L << 12);
-            collections.add(childCollection);
-
-            parentCollection.setChildren(List.of(childCollection));
-            // 更新pos
-            initPos++;
-            collections.add(parentCollection);
+            //TestPlanCollection childCollection = new TestPlanCollection();
+            //BeanUtils.copyProperties(defaultCollection, childCollection);
+            //childCollection.setId(IDGenerator.nextStr());
+            //childCollection.setParentId(parentCollection.getId());
+            //childCollection.setName(caseType.getPlanDefaultCollection());
+            //childCollection.setType(caseType.getKey());
+            //childCollection.setPos(1L << 12);
+            //collections.add(childCollection);
+            //
+            //parentCollection.setChildren(List.of(childCollection));
+            //// 更新pos
+            //initPos++;
+            //collections.add(parentCollection);
         }
-        testPlanCollectionMapper.insertBatch(collections);
+        //testPlanCollectionMapper.insertBatch(collections);
+        //List<String> list = collections.stream().map(TestPlanCollection::getId).toList();
+        collections.forEach(testPlanCollectionMapper::insert);
         return collections;
     }
 
@@ -633,12 +636,15 @@ public class TestPlanServiceImpl extends BaseTestPlanServiceImpl implements Test
         createTestPlan.setCreateUser(operator);
         createTestPlan.setUpdateUser(operator);
         createTestPlan.setStatus(TestPlanConstants.TEST_PLAN_STATUS_NOT_ARCHIVED);
+        createTestPlan.setPlannedStartTime(DateUtils.getLocalDateTime(createOrCopyRequest.getPlannedStartTime()));
+        createTestPlan.setPlannedEndTime(DateUtils.getLocalDateTime(createOrCopyRequest.getPlannedEndTime()));
         mapper.insert(createTestPlan);
         TestPlanConfig testPlanConfig = new TestPlanConfig();
         testPlanConfig.setTestPlanId(createTestPlan.getId());
         testPlanConfig.setAutomaticStatusUpdate(createOrCopyRequest.isAutomaticStatusUpdate());
         testPlanConfig.setRepeatCase(createOrCopyRequest.isRepeatCase());
         testPlanConfig.setPassThreshold(createOrCopyRequest.getPassThreshold());
+        testPlanConfig.setCaseRunMode(ApiBatchRunMode.PARALLEL.name());
         testPlanConfigMapper.insert(testPlanConfig);
         return createTestPlan;
     }
@@ -653,8 +659,12 @@ public class TestPlanServiceImpl extends BaseTestPlanServiceImpl implements Test
     }
 
     private Long getNextOrder(String projectId, String groupId) {
-        long maxPos = queryChain().where(TEST_PLAN.PROJECT_ID.eq(projectId)
-                .and(TEST_PLAN.GROUP_ID.eq(groupId))).oneAs(Long.class);
+        TestPlan one = queryChain().where(TEST_PLAN.PROJECT_ID.eq(projectId)
+                .and(TEST_PLAN.GROUP_ID.eq(groupId))).one();
+        long maxPos = 0;
+        if (one != null) {
+            maxPos = one.getPos();
+        }
         return maxPos + ServiceUtils.POS_STEP;
     }
 

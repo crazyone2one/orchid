@@ -1,6 +1,9 @@
 package cn.master.backend.util;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -75,7 +78,7 @@ public class DateUtils {
      *
      * @return Map<String, String>(2); key取值范围：firstTime/lastTime
      */
-    public static Map<String, Date> getWeedFirstTimeAndLastTime(Date date) throws Exception{
+    public static Map<String, Date> getWeedFirstTimeAndLastTime(Date date) throws Exception {
         Map<String, Date> returnMap = new HashMap<>();
         Calendar calendar = Calendar.getInstance();
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
@@ -142,5 +145,9 @@ public class DateUtils {
         calendar.set(Calendar.SECOND, 59);
         calendar.set(Calendar.MILLISECOND, 999);
         return calendar.getTimeInMillis();
+    }
+
+    public static LocalDateTime getLocalDateTime(long timeStamp) {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timeStamp), ZoneId.systemDefault());
     }
 }

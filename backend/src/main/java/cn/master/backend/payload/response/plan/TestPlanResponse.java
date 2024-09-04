@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public class TestPlanResponse extends TestPlanStatisticsResponse {
     @Schema(description = "创建人名称")
     private String createUserName;
     @Schema(description = "创建时间")
-    private Long createTime;
+    private LocalDateTime createTime;
     @Schema(description = "模块")
     private String moduleName;
     @Schema(description = "模块Id")
@@ -43,16 +44,16 @@ public class TestPlanResponse extends TestPlanStatisticsResponse {
     private Integer childrenCount;
 
     @Schema(description = "计划开始时间")
-    private Long plannedStartTime;
+    private LocalDateTime plannedStartTime;
 
     @Schema(description = "计划结束时间")
-    private Long plannedEndTime;
+    private LocalDateTime plannedEndTime;
 
     @Schema(description = "实际开始时间")
-    private Long actualStartTime;
+    private LocalDateTime actualStartTime;
 
     @Schema(description = "实际结束时间")
-    private Long actualEndTime;
+    private LocalDateTime actualEndTime;
 
     @Schema(description = "测试计划组Id")
     private String groupId;
