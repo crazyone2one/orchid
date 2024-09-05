@@ -50,4 +50,8 @@ public interface OrganizationService extends IService<Organization> {
     void removeMember(String organizationId, String userId, String currentUserId);
 
     Map<String, Long> getTotal(String organizationId);
+
+    Organization checkResourceExist(String scopeId);
+
+    List<UserExtendDTO> getMemberOption(String sourceId, String keyword);
 }

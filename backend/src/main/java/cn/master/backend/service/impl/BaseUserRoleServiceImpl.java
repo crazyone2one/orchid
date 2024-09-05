@@ -11,6 +11,7 @@ import cn.master.backend.mapper.UserRoleMapper;
 import cn.master.backend.payload.PermissionCache;
 import cn.master.backend.payload.dto.system.Permission;
 import cn.master.backend.payload.dto.system.PermissionDefinitionItem;
+import cn.master.backend.payload.dto.user.UserExtendDTO;
 import cn.master.backend.payload.request.system.PermissionSettingUpdateRequest;
 import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.BaseUserRoleRelationService;
@@ -26,12 +27,14 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.UserRoleTableDef.USER_ROLE;
+import static cn.master.backend.entity.table.UserTableDef.USER;
 import static cn.master.backend.handler.result.CommonResultCode.INTERNAL_USER_ROLE_PERMISSION;
 import static cn.master.backend.handler.result.SystemResultCode.NO_GLOBAL_USER_ROLE_PERMISSION;
 
@@ -180,6 +183,47 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
     @Override
     public UserRole get(String id) {
         return mapper.selectOneById(id);
+    }
+
+    @Override
+    public List<UserExtendDTO> getMember(String sourceId, String roleId, String keyword) {
+        List<UserExtendDTO> userExtends = new ArrayList<>();
+        List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(UserRoleRelation::getSourceId).eq(sourceId).list();
+        if (CollectionUtils.isNotEmpty(userRoleRelations)) {
+            Map<String, List<String>> userRoleMap = userRoleRelations.stream().collect(Collectors.groupingBy(UserRoleRelation::getUserId,
+                    Collectors.mapping(UserRoleRelation::getRoleId, Collectors.toList())));
+            userRoleMap.forEach((k, v) -> {
+                UserExtendDTO userExtendDTO = new UserExtendDTO();
+                userExtendDTO.setId(k);
+                v.forEach(roleItem -> {
+                    if (StringUtils.equals(roleItem, roleId)) {
+                        // 该用户已存在用户组关系, 设置为选中状态
+                        userExtendDTO.setCheckRoleFlag(true);
+                    }
+                });
+                userExtends.add(userExtendDTO);
+            });
+            // 设置用户信息, 用户不存在或者已删除, 则不展示
+            List<String> userIds = userExtends.stream().map(UserExtendDTO::getId).toList();
+            List<User> users = QueryChain.of(User.class)
+                    .where(User::getId).in(userIds)
+                    .and(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword))).limit(1000)
+                    .list();
+            if (CollectionUtils.isNotEmpty(users)) {
+                Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getId, user -> user));
+                userExtends.removeIf(userExtend -> {
+                    if (userMap.containsKey(userExtend.getId())) {
+                        BeanUtils.copyProperties(userMap.get(userExtend.getId()), userExtend);
+                        return false;
+                    }
+                    return true;
+                });
+            } else {
+                userExtends.clear();
+            }
+        }
+        userExtends.sort(Comparator.comparing(UserExtendDTO::getName));
+        return userExtends;
     }
 
     private String translateDefaultPermissionName(Permission p) {

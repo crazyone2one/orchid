@@ -24,19 +24,10 @@ const renderIcon = (icon: string) => {
 }
 const menuOptions: MenuOption[] = [
   {
-    label: t('menu.projectManagement'),
+    // label: t('menu.projectManagement'),
+    label: () => h(RouterLink, {to: {name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT}}, {default: () => t('menu.projectManagement')}),
     key: ProjectManagementRouteEnum.PROJECT_MANAGEMENT,
     icon: renderIcon('i-carbon-ibm-cloud-projects'),
-    children: [
-      {
-        label: t('menu.projectManagement.projectPermission'),
-        key: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION,
-      },
-      {
-        label: t('project.permission.member'),
-        key: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
-      }
-    ]
   },
   {
     // label: t('menu.testPlan'),

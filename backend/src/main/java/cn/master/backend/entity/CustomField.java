@@ -1,17 +1,22 @@
 package cn.master.backend.entity;
 
+import cn.master.backend.validation.Created;
+import cn.master.backend.validation.Updated;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 自定义字段 实体类。
@@ -34,25 +39,24 @@ public class CustomField implements Serializable {
      * 自定义字段ID
      */
     @Id
-    @Schema(description = "自定义字段ID")
+    @Schema(description = "自定义字段ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.id.not_blank}", groups = {Updated.class})
+    @Size(min = 1, max = 50, message = "{custom_field.id.length_range}", groups = {Created.class, Updated.class})
     private String id;
 
-    /**
-     * 自定义字段名称
-     */
-    @Schema(description = "自定义字段名称")
+    @Schema(description = "自定义字段名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.name.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 255, message = "{custom_field.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
 
-    /**
-     * 使用场景
-     */
-    @Schema(description = "使用场景")
+    @Schema(description = "使用场景", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.scene.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 30, message = "{custom_field.scene.length_range}", groups = {Created.class, Updated.class})
     private String scene;
 
-    /**
-     * 自定义字段类型
-     */
-    @Schema(description = "自定义字段类型")
+    @Schema(description = "自定义字段类型", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.type.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 30, message = "{custom_field.type.length_range}", groups = {Created.class, Updated.class})
     private String type;
 
     /**
@@ -61,16 +65,13 @@ public class CustomField implements Serializable {
     @Schema(description = "自定义字段备注")
     private String remark;
 
-    /**
-     * 是否是内置字段
-     */
-    @Schema(description = "是否是内置字段")
+    @Schema(description = "是否是内置字段", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "{custom_field.internal.not_blank}", groups = {Created.class})
     private Boolean internal;
 
-    /**
-     * 组织或项目级别字段（PROJECT, ORGANIZATION）
-     */
-    @Schema(description = "组织或项目级别字段（PROJECT, ORGANIZATION）")
+    @Schema(description = "组织或项目级别字段（PROJECT, ORGANIZATION）", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.scope_type.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{custom_field.scope_type.length_range}", groups = {Created.class, Updated.class})
     private String scopeType;
 
     /**
@@ -105,10 +106,15 @@ public class CustomField implements Serializable {
     @Schema(description = "是否需要手动输入选项key")
     private Boolean enableOptionKey;
 
-    /**
-     * 组织或项目ID
-     */
-    @Schema(description = "组织或项目ID")
+    @Schema(description = "组织或项目ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{custom_field.scope_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{custom_field.scope_id.length_range}", groups = {Created.class, Updated.class})
     private String scopeId;
 
+    @Column(ignore = true)
+    private Boolean required;
+    @Column(ignore = true)
+    private String defaultValue;
+    @Column(ignore = true)
+    private Object value;
 }

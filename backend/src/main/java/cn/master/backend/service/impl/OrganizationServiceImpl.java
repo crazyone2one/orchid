@@ -19,6 +19,7 @@ import cn.master.backend.payload.request.system.OrganizationMemberRequest;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.OrganizationService;
 import cn.master.backend.util.JSON;
+import cn.master.backend.util.ServiceUtils;
 import cn.master.backend.util.SessionUtils;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
@@ -300,6 +301,23 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
             total.put("organizationTotal", 1L);
         }
         return total;
+    }
+
+    @Override
+    public Organization checkResourceExist(String scopeId) {
+        return ServiceUtils.checkResourceExist(mapper.selectOneById(scopeId), "permission.system_organization_project.name");
+    }
+
+    @Override
+    public List<UserExtendDTO> getMemberOption(String sourceId, String keyword) {
+        return QueryChain.of(User.class).select(QueryMethods.distinct(USER.ALL_COLUMNS))
+                .select("count(urr.id) > 0 as memberFlag")
+                .from(USER)
+                .leftJoin(USER_ROLE_RELATION.as("urr")).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID)
+                        .and(USER_ROLE_RELATION.SOURCE_ID.eq(sourceId)))
+                .where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)))
+                .groupBy(USER.ID).limit(1000).listAs(UserExtendDTO.class);
+
     }
 
     private void setLog(String organizationId, String createUser, String type, String content, String path, Object originalValue, Object modifiedValue, List<LogDTO> logs) {

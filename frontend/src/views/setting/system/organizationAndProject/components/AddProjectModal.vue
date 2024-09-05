@@ -10,6 +10,7 @@ import {createOrUpdateProject, getSystemOrgOption} from "/@/api/modules/setting/
 import {useForm} from "alova/client";
 import {useAppStore, useUserStore} from "/@/store";
 import {showUpdateOrCreateMessage} from "/@/views/setting/utils.ts";
+import {cloneDeep} from "lodash-es";
 
 const showModal = defineModel<boolean>('visible', {
   default: false,
@@ -18,7 +19,8 @@ const props = defineProps<{
   currentProject?: CreateOrUpdateSystemProjectParams;
 }>();
 const userStore = useUserStore()
-const appStore = useAppStore()
+const appStore = useAppStore();
+const currentOrgId = computed(() => appStore.currentOrgId);
 const isEdit = computed(() => !!props.currentProject?.id);
 const emit = defineEmits<{
   (e: 'cancel', shouldSearch: boolean): void;
@@ -59,8 +61,9 @@ const {
 }
     = useForm(
     formData => {
-      formData.id = isEdit.value ? props.currentProject?.id : '';
-      return createOrUpdateProject(formData as Partial<OrgProjectTableItem>);
+      const param: Partial<OrgProjectTableItem> = cloneDeep(formData) as Partial<OrgProjectTableItem>
+      param.id = isEdit.value ? props.currentProject?.id : '';
+      return createOrUpdateProject(param);
     },
     {
       // 初始化表单数据
@@ -142,7 +145,8 @@ watchEffect(() => {
         </n-form-item>
         <n-form-item :label="$t('system.project.projectAdmin')" path="userIds">
           <user-selector v-model="form.userIds" mode="remote" :type="UserRequestTypeEnum.SYSTEM_PROJECT_ADMIN"
-                         placeholder="system.project.pleaseSelectAdmin"/>
+                         placeholder="system.project.pleaseSelectAdmin"
+                         :load-option-params="{ organizationId: currentOrgId,}"/>
         </n-form-item>
         <n-form-item :label="$t('system.project.moduleSetting')" path="module">
           <n-checkbox-group v-model:value="form.moduleIds">

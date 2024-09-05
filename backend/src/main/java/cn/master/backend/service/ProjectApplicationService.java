@@ -18,4 +18,8 @@ public interface ProjectApplicationService extends IService<ProjectApplication> 
     Map<String, Object> get(ProjectApplicationRequest request, List<String> types);
 
     void putResourcePool(String projectId, Map<String, Object> configMap, String type);
+
+    ProjectApplication getByType(String projectId, String name);
+
+    void createOrUpdateConfig(ProjectApplication projectApplication);
 }

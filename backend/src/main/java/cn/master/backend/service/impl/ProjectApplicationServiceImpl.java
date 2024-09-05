@@ -102,4 +102,23 @@ public class ProjectApplicationServiceImpl extends ServiceImpl<ProjectApplicatio
             }
         }
     }
+
+    @Override
+    public ProjectApplication getByType(String projectId, String name) {
+        return queryChain().where(ProjectApplication::getProjectId).eq(projectId)
+                .and(ProjectApplication::getType).eq(name).one();
+    }
+
+    @Override
+    public void createOrUpdateConfig(ProjectApplication application) {
+        String type = application.getType();
+        String projectId = application.getProjectId();
+        QueryChain<ProjectApplication> queryChain = queryChain().where(ProjectApplication::getProjectId).eq(projectId)
+                .and(ProjectApplication::getType).eq(type);
+        if (queryChain.exists()) {
+            mapper.updateByQuery(application, queryChain);
+        } else {
+            mapper.insert(application);
+        }
+    }
 }

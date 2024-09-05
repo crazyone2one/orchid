@@ -19,6 +19,7 @@ export interface UserGroupItem {
     scopeId: string;
     // 自定义排序
     pos: number;
+    memberCount?: number;
 }
 
 export interface UserGroupListItem {

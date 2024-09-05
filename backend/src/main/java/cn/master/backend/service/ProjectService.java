@@ -60,4 +60,6 @@ public interface ProjectService extends IService<Project> {
     boolean hasPermission(String id, String userId);
 
     List<UserExtendDTO> getMemberOption(String projectId, String keyword);
+
+    Project checkResourceExist(String projectId);
 }

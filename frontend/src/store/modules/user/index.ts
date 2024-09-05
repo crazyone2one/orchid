@@ -1,11 +1,15 @@
 import {defineStore} from 'pinia'
-import {fetchLogin, fetchLogout} from "/@/api/modules/login";
+import {fetchLogin, fetchLogout, fetchUserIsLogin} from "/@/api/modules/login";
 import {LoginData} from "/@/models/user.ts";
 import useAppStore from "/@/store/modules/app";
 import {UserState} from "/@/store/modules/user/types.ts";
-import {composePermissions} from "/@/utils/permission.ts";
-import {clearToken} from "/@/utils/auth.ts";
+import {composePermissions, getFirstRouteNameByPermission} from "/@/utils/permission.ts";
+import {clearToken, setToken} from "/@/utils/auth.ts";
 import {removeRouteListener} from "/@/utils/route-listener.ts";
+import {getHashParameters, getQueryVariable} from "/@/utils";
+import router from "/@/router";
+import {getUserHasProjectPermission} from "/@/api/modules/system.ts";
+import {getProjectInfo} from "/@/api/modules/project-management/project.ts";
 
 
 const useUserStore = defineStore('main', {
@@ -96,7 +100,90 @@ const useUserStore = defineStore('main', {
             clearToken();
             this.resetInfo();
             removeRouteListener();
-        }
+        },
+        /**
+         * 判断用户是否登录并设置用户信息
+         * @param forceSet
+         */
+        async isLogin(forceSet = false) {
+            try {
+                const res = await fetchUserIsLogin();
+                if (!res) {
+                    return false;
+                }
+                const appStore = useAppStore();
+                setToken(res.access_token, res.refresh_token);
+                this.setInfo(res);
+                let {orgId, pId} = getHashParameters();
+                if (!pId) {
+                    pId = getQueryVariable('_pId') || '';
+                }
+                if (!orgId) {
+                    orgId = getQueryVariable('_orgId') || '';
+                }
+                if (!forceSet && orgId) {
+                    appStore.setCurrentOrgId(orgId);
+                }
+                if (!forceSet && pId) {
+                    appStore.setCurrentProjectId(pId);
+                }
+                if (forceSet) {
+                    appStore.setCurrentOrgId(res.lastOrganizationId || '');
+                    appStore.setCurrentProjectId(res.lastProjectId || '');
+                }
+                return true;
+            } catch (err) {
+                console.log(err);
+                return false;
+            }
+        },
+        async checkIsLogin(forceSet = false) {
+            const appStore = useAppStore();
+            const isLogin = await this.isLogin(forceSet);
+            if (isLogin && appStore.currentProjectId !== 'no_such_project') {
+                // 当前为登陆状态，且已经选择了项目，初始化当前项目配置
+                try {
+                    const HasProjectPermission = await getUserHasProjectPermission(appStore.currentProjectId);
+                    if (!HasProjectPermission) {
+                        // 没有项目权限（用户所在的当前项目被禁用&用户被移除出去该项目）
+                        router.push({
+                            name: "no project",
+                        });
+                        return;
+                    }
+                    const routeName = router.currentRoute.value.name as string;
+                    if (routeName?.includes('setting')) {
+                        // 访问系统设置下的页面，不需要获取项目信息，会在切换到非系统设置页面时获取(ms-menu组件内初始化会获取)
+                        await appStore.setCurrentMenuConfig([]);
+                        return;
+                    }
+                    const res = await getProjectInfo(appStore.currentProjectId);
+                    if (!res) {
+                        // 如果项目被删除或者被禁用，跳转到无项目页面
+                        router.push({
+                            name: 'no-project',
+                        });
+                    }
+
+                    if (res) {
+                        appStore.setCurrentMenuConfig(res?.moduleIds || []);
+                    }
+                } catch (err) {
+                    await appStore.setCurrentMenuConfig([]);
+                    console.log(err);
+                }
+            } else if (isLogin && appStore.currentProjectId === 'no_such_project') {
+                await router.push({
+                    name: 'no-project',
+                });
+                throw new Error('no project');
+            }
+            if (window.location.hash.indexOf('login') > -1 && isLogin) {
+                // 当前页面为登录页面，且已经登录，跳转到首页
+                const currentRouteName = getFirstRouteNameByPermission(router.getRoutes());
+                await router.push({name: currentRouteName});
+            }
+        },
     },
     // persist: true,
     persist: {

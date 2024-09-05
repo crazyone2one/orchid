@@ -8,6 +8,9 @@ export const fetchLogin = (param: { username: string, password: string }) => {
     };
     return method;
 };
+export const fetchUserIsLogin = () => {
+    return alovaInstance.Get<LoginRes>('/auth/info');
+};
 export const fetchRefreshToken = (param: { refreshToken: string }) => {
     const method = alovaInstance.Post<{ access_token: string, refresh_token: string }>('/auth/refreshToken', param);
     method.meta = {

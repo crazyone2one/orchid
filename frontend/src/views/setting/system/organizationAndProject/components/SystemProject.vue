@@ -12,6 +12,7 @@ import OButton from '/@/components/o-button/index.vue'
 import AddProjectModal from "/@/views/setting/system/organizationAndProject/components/AddProjectModal.vue";
 import {UserItem} from "/@/models/setting/log.ts";
 import Pagination from '/@/components/o-pagination/index.vue'
+import AddUserModal from "/@/views/setting/system/organizationAndProject/components/AddUserModal.vue";
 
 const {t} = useI18n()
 const permission = resolveDirective('permission')
@@ -100,9 +101,17 @@ const columns: DataTableColumns<OrgProjectTableItem> = [
               onClick: () => showAddProjectModal(row)
             }, {}), [[permission, ['SYSTEM_ORGANIZATION_PROJECT:READ+UPDATE']]])
         )
-        if (hasAnyPermission(['SYSTEM_ORGANIZATION_PROJECT:READ+ADD_MEMBER1'])) {
+        if (hasAnyPermission(['SYSTEM_ORGANIZATION_PROJECT:READ+ADD_MEMBER'])) {
           result.push(
-              h(OButton, {text: true, content: t('system.organization.addMember')}, {}),
+              h(OButton, {
+                text: true, content: t('system.organization.addMember'),
+                onClick: () => showAddUserModal(row)
+              }, {}),
+          )
+        }
+        if (hasAnyPermission(['PROJECT_BASE_INFO:READ'])) {
+          result.push(
+              h(OButton, {text: true, content: t('system.project.enterProject')}, {}),
           )
         }
         return result;
@@ -167,7 +176,16 @@ const handleCancel = (shouldSearch: boolean) => {
     fetchData();
   }
   addProjectVisible.value = false;
-}
+};
+const currentProjectId = ref('');
+const userVisible = ref(false);
+const showAddUserModal = (record: OrgProjectTableItem) => {
+  currentProjectId.value = record.id;
+  userVisible.value = true;
+};
+const handleAddUserModalCancel = () => {
+  userVisible.value = false;
+};
 defineExpose({fetchData})
 onMounted(() => {
   fetchData()
@@ -187,6 +205,10 @@ onMounted(() => {
                      :visible="addProjectVisible"
                      :current-project="currentUpdateProject"
                      @cancel="handleCancel"/>
+  <add-user-modal :project-id="currentProjectId"
+                  :visible="userVisible"
+                  @submit="fetchData"
+                  @cancel="handleAddUserModalCancel"/>
 </template>
 
 <style scoped>

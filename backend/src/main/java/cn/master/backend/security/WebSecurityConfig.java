@@ -41,7 +41,7 @@ public class WebSecurityConfig {
         http.headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
         //http.anonymous(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> {
-            authorize.requestMatchers("/auth/login", "/auth/refreshToken").permitAll();
+            authorize.requestMatchers("/auth/login", "/auth/refreshToken","/auth/info").permitAll();
             authorize.requestMatchers("/swagger-ui*/**", "/v3/api-docs/**").permitAll();
             authorize.anyRequest().authenticated();
         });

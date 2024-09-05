@@ -3,6 +3,7 @@ import {NLayout, NLayoutFooter,} from "naive-ui";
 import NavBar from '/@/layout/components/navbar/index.vue'
 import sideBar from '/@/layout/components/sidebar/index.vue'
 import {useAppStore} from "/@/store";
+import OBreadCrumb from '/@/components/o-breadcrumb/index.vue'
 
 const appStore = useAppStore()
 
@@ -13,6 +14,7 @@ const appStore = useAppStore()
     <n-layout position="absolute" style="top: 64px; bottom: 64px" has-sider>
       <side-bar/>
       <n-layout content-style="padding: 24px;" :native-scrollbar="false">
+        <o-bread-crumb/>
         <router-view/>
       </n-layout>
     </n-layout>

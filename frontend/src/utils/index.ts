@@ -127,3 +127,68 @@ export function traverseTree<T>(
         }
     }
 }
+
+/**
+ * 根据 key 遍历树，并返回找到的节点路径和节点
+ */
+export function findNodePathByKey<T>(
+    tree: TreeNode<T>[],
+    targetKey: string,
+    dataKey?: string,
+    customKey = 'key'
+): TreeNode<T> | null {
+    for (let i = 0; i < tree.length; i++) {
+        const node = tree[i];
+        if (dataKey ? node[dataKey]?.[customKey] === targetKey : node[customKey] === targetKey) {
+            return {...node, treePath: [dataKey ? node[dataKey] : node]}; // 如果当前节点的 key 与目标 key 匹配，则返回当前节点
+        }
+
+        if (Array.isArray(node.children) && node.children.length > 0) {
+            const result = findNodePathByKey(node.children, targetKey, dataKey, customKey); // 递归在子节点中查找
+            if (result) {
+                result.treePath.unshift(dataKey ? node[dataKey] : node);
+                return result; // 如果在子节点中找到了匹配的节点，则返回该节点
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * 获取 URL 哈希参数
+ */
+export const getHashParameters = (): Record<string, string> => {
+    const query = window.location.hash.split('?')[1]; // 获取 URL 哈希参数部分
+    const paramsArray = query?.split('&') || []; // 将哈希参数字符串分割成数组
+    const params: Record<string, string> = {};
+
+    // 遍历数组并解析参数
+    paramsArray.forEach((param) => {
+        const [key, value] = param.split('=');
+        if (key && value) {
+            params[key] = decodeURIComponent(value); // 解码参数值
+        }
+    });
+
+    return params;
+};
+export const getQueryVariable = (variable: string) => {
+    const urlString = window.location.href;
+    const queryIndex = urlString.indexOf('?');
+    if (queryIndex !== -1) {
+        const query = urlString.substring(queryIndex + 1);
+
+        // 分割查询参数
+        const params = query.split('&');
+        // 遍历参数，找到 _token 参数的值
+        let variableValue;
+        params.forEach((param) => {
+            const equalIndex = param.indexOf('=');
+            const variableName = param.substring(0, equalIndex);
+            if (variableName === variable) {
+                variableValue = param.substring(equalIndex + 1);
+            }
+        });
+        return variableValue;
+    }
+}

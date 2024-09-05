@@ -2,7 +2,7 @@ import {alovaInstance} from "/@/api";
 import {CommonPage, TableQueryParams} from "/@/models/common.ts";
 import * as orgUrl from '/@/api/req-urls/system-org-project.ts'
 import {OrganizationListItem} from "/@/models/organization.ts";
-import {OrgProjectTableItem, SystemOrgOption} from "/@/models/orgAndProject.ts";
+import {AddUserToOrgOrProjectParams, OrgProjectTableItem, SystemOrgOption} from "/@/models/orgAndProject.ts";
 import {UserListItem} from "/@/models/setting/user.ts";
 
 /**
@@ -36,12 +36,35 @@ export const enableOrDisableOrg = (id: string, isEnable = true) =>
 export const enableOrDisableProject = (id: string, isEnable = true) =>
     alovaInstance.Get(`${isEnable ? orgUrl.getEnableProjectUrl : orgUrl.getDisableProjectUrl}${id}`)
 
-
+/**
+ * 系统-获取管理员下拉选项
+ * @param keyword
+ */
 export const getAdminByOrganizationOrProject = (keyword: string) => alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getAdminByOrgOrProjectUrl}`, {params: {keyword}});
+/**
+ * 组织-获取项目下的管理员选项
+ * @param organizationId
+ * @param keyword
+ */
+export const getAdminByProjectByOrg = (organizationId: string, keyword: string) =>
+    alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getAdminByOrganizationOrProjectUrl}${organizationId}`, {params: {keyword}});
 /**
  * 获取项目和组织的总数
  */
 export const getOrgAndProjectCount = () => alovaInstance.Get<{
     projectTotal: number,
     organizationTotal: number
-}>(`${orgUrl.getOrgAndProjectCountUrl}`)
+}>(`${orgUrl.getOrgAndProjectCountUrl}`);
+/**
+ * 给组织或项目添加成员
+ * @param param
+ */
+export const addUserToOrgOrProject = (param: AddUserToOrgOrProjectParams) =>
+    alovaInstance.Post<OrgProjectTableItem>(param.projectId ? orgUrl.postAddProjectMemberUrl : orgUrl.postAddOrgMemberUrl, param);
+/**
+ * 获取用户下拉选项
+ * @param sourceId
+ * @param keyword
+ */
+export const getUserByOrganizationOrProject = (sourceId: string, keyword: string) =>
+    alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getUserByOrgOrProjectUrl}${sourceId}`, {params: {keyword}});

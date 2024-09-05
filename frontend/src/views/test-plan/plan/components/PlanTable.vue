@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import type {DataTableColumns, DataTableRowKey} from "naive-ui";
-import {TestPlanItem} from "/@/models/test-plan/test-plan.ts";
+import {DataTableColumns, DataTableRowKey, NTooltip} from "naive-ui";
+import {PassRateCountDetail, TestPlanDetail, TestPlanItem} from "/@/models/test-plan/test-plan.ts";
 import {useI18n} from "vue-i18n";
-import {onBeforeMount, ref, watch} from "vue";
+import {h, onBeforeMount, ref, watch} from "vue";
 import {usePagination} from "alova/client";
 import {ModuleTreeNode, TableQueryParams} from "/@/models/common.ts";
 import {getTestPlanList} from "/@/api/modules/test-plan/test-plan.ts";
 import {useAppStore} from "/@/store";
 import {testPlanTypeEnum} from "/@/enums/test-plan-enum.ts";
+import AdvanceFilter from '/@/components/o-advance-filter/index.vue'
+import {FilterFormItem} from "/@/components/o-advance-filter/type.ts";
+import StatusTag from '/@/components/o-status-tag/index.vue'
+import {getModules} from "/@/views/case-management/case-management-feature/components/utils.ts";
+import dayjs from 'dayjs';
+import {LastExecuteResults} from "/@/enums/case-enum.ts";
+
 
 const props = defineProps<{
   activeFolder: string;
@@ -25,7 +32,7 @@ const emit = defineEmits<{
 }>();
 const {t} = useI18n()
 const appStore = useAppStore()
-const columns: DataTableColumns<TestPlanItem> = [
+const columns: DataTableColumns<TestPlanDetail> = [
   {
     type: 'selection'
   },
@@ -42,7 +49,13 @@ const columns: DataTableColumns<TestPlanItem> = [
   {
     title: t('common.status'),
     key: 'status',
-    width: 150
+    width: 150,
+    render: (row) => {
+      if (getStatus(row?.id as string)) {
+        return h(StatusTag, {status: getStatus(row?.id as string)})
+      }
+      return h('span', {}, {default: () => '--'})
+    }
   },
   {
     title: t('common.creator'),
@@ -67,12 +80,29 @@ const columns: DataTableColumns<TestPlanItem> = [
   {
     title: t('testPlan.testPlanIndex.belongModule'),
     key: 'moduleId',
-    width: 200
+    width: 200,
+    render(record) {
+      return h('span', {}, {default: () => getModules(record.moduleId, props.moduleTree)})
+    },
   },
   {
     title: t('testPlan.testPlanIndex.planStartToEndTime'),
     key: 'planStartToEndTime',
-    width: 370
+    width: 370,
+    render(record) {
+      return h('span', {}, {
+        default: () => {
+          return [
+            h('span', {}, {default: () => record.plannedStartTime ? dayjs(record.plannedStartTime).format('YYYY-MM-DD HH:mm:ss') : '-'}),
+            h('span', {}, {default: () => t('common.to')}),
+            h(NTooltip, {disabled: record.execStatus !== LastExecuteResults.ERROR}, {
+              trigger: () => h('span', {}, {default: () => record?.plannedEndTime ? dayjs(record.plannedEndTime).format('YYYY-MM-DD HH:mm:ss') : '-'}),
+              default: () => t('testPlan.planStartToEndTimeTip')
+            }),
+          ];
+        }
+      })
+    }
   },
   {
     title: t('testPlan.testPlanIndex.actualStartToEndTime'),
@@ -82,9 +112,18 @@ const columns: DataTableColumns<TestPlanItem> = [
 ];
 const checkedRowKeys = ref<DataTableRowKey[]>([]);
 const showType = ref<keyof typeof testPlanTypeEnum>(testPlanTypeEnum.ALL);
+const filterRowCount = ref(0);
+const isArchived = ref<boolean>(false);
+const keyword = ref<string>('');
+const filterConfigList = ref<FilterFormItem[]>([]);
+
 const handleCheck = (rowKeys: DataTableRowKey[]) => {
   checkedRowKeys.value = rowKeys;
 };
+const defaultCountDetailMap = ref<Record<string, PassRateCountDetail>>({});
+const getStatus = (id: string) => {
+  return defaultCountDetailMap.value[id]?.status;
+}
 const reqParam = ref<TableQueryParams>({
   current: 1,
   pageSize: 6,
@@ -135,8 +174,7 @@ const fetchData = () => {
 }
 onBeforeMount(() => {
   fetchData();
-  const params = initTableParams();
-  console.log('params', params)
+  initTableParams();
 });
 watch(
     () => props.activeFolder,
@@ -153,6 +191,32 @@ defineExpose({
 </script>
 
 <template>
+  <advance-filter v-model:keyword="keyword" :row-count="filterRowCount"
+                  :search-placeholder="t('common.searchByIDNameTag')"
+                  :filter-config-list="filterConfigList"
+                  @keyword-search="fetchData">
+    <template #left>
+      <div class="flex w-full items-center justify-between">
+        <div>
+          <n-radio-group v-model:value="showType" class="file-show-type mr-2">
+            <n-radio-button :value="testPlanTypeEnum.ALL" class="show-type-icon p-[2px]">
+              {{ t('testPlan.testPlanIndex.all') }}
+            </n-radio-button>
+            <n-radio-button :value="testPlanTypeEnum.TEST_PLAN" class="show-type-icon p-[2px]">
+              {{ t('testPlan.testPlanIndex.plan') }}
+            </n-radio-button>
+            <n-radio-button :value="testPlanTypeEnum.GROUP" class="show-type-icon p-[2px]">
+              {{ t('testPlan.testPlanIndex.testPlanGroup') }}
+            </n-radio-button>
+          </n-radio-group>
+        </div>
+        <div class="mr-[24px]">
+          <n-switch v-model:value="isArchived" size="small"/>
+          <span class="ml-1">{{ t('testPlan.testPlanGroup.seeArchived') }}</span>
+        </div>
+      </div>
+    </template>
+  </advance-filter>
   <n-data-table :bordered="false" :columns="columns" :data="data" :row-key="(tmp:TestPlanItem)=>tmp.id"
                 @update:checked-row-keys="handleCheck"/>
 </template>

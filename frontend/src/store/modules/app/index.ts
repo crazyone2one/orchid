@@ -4,6 +4,7 @@ import {AppState} from "/@/store/modules/app/types.ts";
 import {cloneDeep} from "lodash-es";
 import {getProjectList} from "/@/api/modules/project-management/project.ts";
 import {getProjectInfo} from "/@/api/modules/project-management/basic-info.ts";
+import {BreadcrumbItem} from "/@/components/o-breadcrumb/types.ts";
 
 const useAppStore = defineStore('app', {
     state: (): AppState => {
@@ -15,7 +16,8 @@ const useAppStore = defineStore('app', {
             currentTopMenu: {} as RouteRecordRaw,
             projectList: [],
             innerHeight: 0,
-        }
+            breadcrumbList: []
+        };
     },
     getters: {
         getCurrentOrgId(state: any): string {
@@ -23,6 +25,9 @@ const useAppStore = defineStore('app', {
         },
         getCurrentProjectId(state: any): string {
             return state.currentProjectId;
+        },
+        getBreadcrumbList(state: AppState): BreadcrumbItem[] {
+            return cloneDeep(state.breadcrumbList);
         },
     },
     actions: {
@@ -52,6 +57,9 @@ const useAppStore = defineStore('app', {
          */
         setCurrentTopMenu(menu: RouteRecordRaw) {
             this.currentTopMenu = cloneDeep(menu);
+        },
+        setBreadcrumbList(breadcrumbs: BreadcrumbItem[] | undefined) {
+            this.breadcrumbList = breadcrumbs ? cloneDeep(breadcrumbs) : [];
         },
         async initProjectList() {
             try {

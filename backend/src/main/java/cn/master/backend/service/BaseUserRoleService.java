@@ -2,6 +2,7 @@ package cn.master.backend.service;
 
 import cn.master.backend.entity.User;
 import cn.master.backend.payload.dto.system.PermissionDefinitionItem;
+import cn.master.backend.payload.dto.user.UserExtendDTO;
 import cn.master.backend.payload.request.system.OrganizationUserRoleMemberRequest;
 import cn.master.backend.payload.request.system.PermissionSettingUpdateRequest;
 import cn.master.backend.validation.Created;
@@ -43,4 +44,6 @@ public interface BaseUserRoleService extends IService<UserRole> {
     void checkMemberParam(String userId, String roleId);
 
     UserRole get(String id);
+
+    List<UserExtendDTO> getMember(String sourceId, String roleId, String keyword);
 }

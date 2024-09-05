@@ -33,7 +33,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -158,7 +157,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return permissionDTO;
     }
 
-    private void autoSwitch(UserDTO user) {
+    @Override
+    public void autoSwitch(UserDTO user) {
 // 判断是否是系统管理员
         if (isSystemAdmin(user)) {
             return;
@@ -255,7 +255,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return projectList;
     }
 
-    private UserDTO getUserDTO(String id) {
+    @Override
+    public UserDTO getUserDTO(String id) {
         UserDTO response = QueryChain.of(User.class).where(User::getId).eq(id).oneAs(UserDTO.class);
         UserRolePermissionDTO dto = getUserRolePermission(id);
         response.setUserRoleRelations(dto.getUserRoleRelations());

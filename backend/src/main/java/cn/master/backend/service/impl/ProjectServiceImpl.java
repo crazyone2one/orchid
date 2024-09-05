@@ -21,6 +21,7 @@ import cn.master.backend.service.BaseUserRolePermissionService;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.ProjectService;
 import cn.master.backend.util.JSON;
+import cn.master.backend.util.ServiceUtils;
 import cn.master.backend.util.SessionUtils;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
@@ -129,6 +130,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             if (CollectionUtils.isNotEmpty(projectDTO.getModuleSetting())) {
                 projectDTO.setModuleIds(projectDTO.getModuleSetting());
             }
+            projectDTO.setOrganizationName(QueryChain.of(Organization.class).where(ORGANIZATION.ID.eq(projectDTO.getOrganizationId())).one().getName());
             projectDTO.setMemberCount(projectMap.get(projectDTO.getId()).getMemberCount());
             List<UserExtendDTO> userExtends = userMapList.get(projectDTO.getId());
             if (CollectionUtils.isNotEmpty(userExtends)) {
@@ -588,6 +590,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                     .listAs(UserExtendDTO.class);
         }
         return List.of();
+    }
+
+    @Override
+    public Project checkResourceExist(String projectId) {
+        return ServiceUtils.checkResourceExist(mapper.selectOneById(projectId), "permission.project.name");
     }
 
     private void checkOrg(String organizationId) {

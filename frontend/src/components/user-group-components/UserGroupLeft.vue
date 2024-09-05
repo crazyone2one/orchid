@@ -413,8 +413,8 @@ defineExpose({
                                          v-bind="popVisible[item.id]"
                                          @cancel="handleRenameCancel(item)"
                                          @submit="handleRenameCancel(item, item.id)">
-              <div class="flex max-w-[100%] grow flex-row items-center justify-between">
-                <div class="list-item-name one-line-text">{{ item.name }}</div>
+              <div class="flex max-w-[100%] grow flex-row items-center justify-between" :class="{ '!bg-green-200': item.id === currentId }">
+                <div class="list-item-name one-line-text" >{{ item.name }}</div>
                 <div v-if="item.type === systemType ||
                     (isProjectShowAll &&
                       !item.internal &&
@@ -423,7 +423,7 @@ defineExpose({
                      class="list-item-action flex flex-row items-center gap-[8px] opacity-0"
                      :class="{ '!opacity-100': item.id === currentId }">
                   <div v-if="item.type === systemType" class="icon-button">
-                    <div v-permission="props.updatePermission" class="i-carbon-add-alt"/>
+                    <div v-permission="props.updatePermission" class="i-carbon-add-alt" @click="handleAddMember"/>
                   </div>
                   <more-action
                       v-if="isProjectShowAll && !item.internal && (item.scopeId !== 'global' || !isGlobalDisable) && projectMoreAction.length > 0"

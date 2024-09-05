@@ -175,5 +175,13 @@ public class SystemOrganizationController {
     public Map<String, Long> getTotal(@RequestParam(value = "organizationId",required = false) String organizationId) {
         return organizationService.getTotal(organizationId);
     }
-
+    @GetMapping("/get-option/{sourceId}")
+    @Operation(summary = "系统设置-系统-组织与项目-获取成员下拉选项")
+    @HasAuthorize(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ)
+    @Parameter(name = "sourceId", description = "组织ID或项目ID", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    public List<UserExtendDTO> getMemberOption(@PathVariable String sourceId,
+                                               @Schema(description = "查询关键字，根据邮箱和用户名查询")
+                                               @RequestParam(value = "keyword", required = false) String keyword) {
+        return organizationService.getMemberOption(sourceId, keyword);
+    }
 }

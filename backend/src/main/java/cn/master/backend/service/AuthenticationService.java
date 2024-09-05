@@ -17,4 +17,8 @@ public interface AuthenticationService {
 
     AuthenticationResponse refreshToken(RefreshTokenRequest request);
     AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws Exception;
+
+    UserDTO getUserDTO(String id);
+
+    void autoSwitch(UserDTO userDTO);
 }
