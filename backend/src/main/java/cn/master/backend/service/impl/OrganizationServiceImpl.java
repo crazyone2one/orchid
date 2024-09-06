@@ -1,21 +1,15 @@
 package cn.master.backend.service.impl;
 
 import cn.master.backend.constants.*;
-import cn.master.backend.entity.Organization;
-import cn.master.backend.entity.Project;
-import cn.master.backend.entity.User;
-import cn.master.backend.entity.UserRoleRelation;
+import cn.master.backend.entity.*;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.mapper.OrganizationMapper;
+import cn.master.backend.mapper.UserMapper;
 import cn.master.backend.mapper.UserRoleRelationMapper;
-import cn.master.backend.payload.dto.system.LogDTO;
-import cn.master.backend.payload.dto.system.OptionDTO;
-import cn.master.backend.payload.dto.system.OrganizationCountDTO;
-import cn.master.backend.payload.dto.system.OrganizationDTO;
+import cn.master.backend.payload.dto.system.*;
 import cn.master.backend.payload.dto.system.request.OrganizationRequest;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
-import cn.master.backend.payload.request.system.OrganizationMemberBatchRequest;
-import cn.master.backend.payload.request.system.OrganizationMemberRequest;
+import cn.master.backend.payload.request.system.*;
 import cn.master.backend.service.OperationLogService;
 import cn.master.backend.service.OrganizationService;
 import cn.master.backend.util.JSON;
@@ -35,18 +29,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.OrganizationTableDef.ORGANIZATION;
 import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.backend.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
+import static cn.master.backend.entity.table.UserRoleTableDef.USER_ROLE;
 import static cn.master.backend.entity.table.UserTableDef.USER;
 
 /**
@@ -60,14 +53,107 @@ import static cn.master.backend.entity.table.UserTableDef.USER;
 public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Organization> implements OrganizationService {
     private final UserRoleRelationMapper userRoleRelationMapper;
     private final OperationLogService operationLogService;
+    private final UserMapper userMapper;
     private static final String ADD_MEMBER_PATH = "/system/organization/add-member";
     private static final String REMOVE_MEMBER_PATH = "/system/organization/remove-member";
     public static final Integer DEFAULT_REMAIN_DAY_COUNT = 30;
     private static final Long DEFAULT_ORGANIZATION_NUM = 100001L;
 
     @Override
-    public Page<Organization> getMemberListByOrg(OrganizationRequest request) {
-        return new Page<>();
+    public Page<OrgUserExtend> getMemberListByOrg(OrganizationRequest request) {
+        //根据组织ID获取所有组织用户关系表
+        String organizationId = request.getOrganizationId();
+        Page<OrgUserExtend> orgUserExtends = mapper.paginateAs(Page.of(request.getCurrent(), request.getPageSize()), listMemberByOrgQuery(request), OrgUserExtend.class);
+        Map<String, OrgUserExtend> userMap = orgUserExtends.getRecords()
+                .stream().collect(Collectors.toMap(OrgUserExtend::getId, user -> user));
+        List<UserRoleRelation> userRoleRelationsByUsers = QueryChain.of(UserRoleRelation.class)
+                .where(USER_ROLE_RELATION.ORGANIZATION_ID.eq(organizationId)
+                        .and(USER_ROLE_RELATION.USER_ID.in(new ArrayList<>(userMap.keySet()))))
+                .orderBy(USER_ROLE_RELATION.CREATE_TIME.desc())
+                .list();
+        //根据关系表查询出用户的关联组织和用户组
+        Map<String, Set<String>> userIdRoleIdMap = new HashMap<>();
+        Map<String, Set<String>> userIdProjectIdMap = new HashMap<>();
+        Set<String> roleIdSet = new HashSet<>();
+        Set<String> projectIdSet = new HashSet<>();
+        for (UserRoleRelation userRoleRelationsByUser : userRoleRelationsByUsers) {
+            String sourceId = userRoleRelationsByUser.getSourceId();
+            String roleId = userRoleRelationsByUser.getRoleId();
+            String userId = userRoleRelationsByUser.getUserId();
+            //收集组织级别的用户组
+            if (StringUtils.equals(sourceId, organizationId)) {
+                getTargetIds(userIdRoleIdMap, roleIdSet, roleId, userId);
+            }
+            //收集项目id
+            if (!StringUtils.equals(sourceId, organizationId)) {
+                getTargetIds(userIdProjectIdMap, projectIdSet, sourceId, userId);
+            }
+        }
+        List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.ID.in(new ArrayList<>(roleIdSet))).list();
+        List<Project> projects = new ArrayList<>();
+        if (!projectIdSet.isEmpty()) {
+            projects = QueryChain.of(Project.class).where(PROJECT.ID.in(projectIdSet)).list();
+        }
+        for (OrgUserExtend orgUserExtend : orgUserExtends.getRecords()) {
+            if (!projects.isEmpty()) {
+                Set<String> projectIds = userIdProjectIdMap.get(orgUserExtend.getId());
+                if (CollectionUtils.isNotEmpty(projectIds)) {
+                    List<Project> projectFilters = projects.stream().filter(t -> projectIds.contains(t.getId())).toList();
+                    List<OptionDTO> projectList = new ArrayList<>();
+                    setProjectList(projectList, projectFilters);
+                    orgUserExtend.setProjectIdNameMap(projectList);
+                }
+            }
+
+            Set<String> userRoleIds = userIdRoleIdMap.get(orgUserExtend.getId());
+            List<UserRole> userRoleFilters = userRoles.stream().filter(t -> userRoleIds.contains(t.getId())).toList();
+            List<OptionDTO> userRoleList = new ArrayList<>();
+            setUserRoleList(userRoleList, userRoleFilters);
+            orgUserExtend.setUserRoleIdNameMap(userRoleList);
+        }
+        return orgUserExtends;
+    }
+
+    private void setUserRoleList(List<OptionDTO> userRoleList, List<UserRole> userRoles) {
+        for (UserRole userRole : userRoles) {
+            OptionDTO optionDTO = new OptionDTO();
+            optionDTO.setId(userRole.getId());
+            optionDTO.setName(userRole.getName());
+            userRoleList.add(optionDTO);
+        }
+    }
+
+    private void setProjectList(List<OptionDTO> projectList, List<Project> projectFilters) {
+        for (Project project : projectFilters) {
+            OptionDTO optionDTO = new OptionDTO();
+            optionDTO.setId(project.getId());
+            optionDTO.setName(project.getName());
+            projectList.add(optionDTO);
+        }
+    }
+
+    private void getTargetIds(Map<String, Set<String>> userIdTargetIdMap, Set<String> targetIdSet, String sourceId, String userId) {
+        Set<String> targetIds = userIdTargetIdMap.get(userId);
+        if (CollectionUtils.isEmpty(targetIds)) {
+            targetIds = new HashSet<>();
+        }
+        targetIds.add(sourceId);
+        targetIdSet.add(sourceId);
+        userIdTargetIdMap.put(userId, targetIds);
+    }
+
+    private QueryWrapper listMemberByOrgQuery(OrganizationRequest request) {
+        QueryWrapper subQuery = QueryChain.create()
+                .select(USER.ALL_COLUMNS, USER_ROLE_RELATION.ROLE_ID, USER_ROLE_RELATION.CREATE_TIME.as("memberTime"))
+                .from(USER_ROLE_RELATION).join(USER).on(USER_ROLE_RELATION.USER_ID.eq(USER.ID))
+                .where(USER_ROLE_RELATION.SOURCE_ID.eq(request.getOrganizationId()))
+                .and(USER.NAME.like(request.getKeyword())
+                        .or(USER.EMAIL.like(request.getKeyword()))
+                        .or(USER.PHONE.like(request.getKeyword())))
+                .orderBy(USER.UPDATE_TIME.desc());
+        return new QueryWrapper().select("temp.*", "min(temp.memberTime) as groupTime")
+                .from(new SelectQueryTable(subQuery).as("temp"))
+                .groupBy("temp.id").orderBy("groupTime");
     }
 
     @Override
@@ -269,6 +355,7 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
     @Override
     @Transactional(rollbackOn = Exception.class)
     public void removeMember(String organizationId, String userId, String currentUserId) {
+        List<LogDTO> logs = new ArrayList<>();
         checkOrgExistById(organizationId);
         long count = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)
                 .and(USER_ROLE_RELATION.ROLE_ID.eq(InternalUserRole.ORG_ADMIN.getValue()))
@@ -285,6 +372,9 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
         QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)
                 .and(USER_ROLE_RELATION.USER_ID.eq(userId)));
         LogicDeleteManager.execWithoutLogicDelete(() -> userRoleRelationMapper.deleteByQuery(queryChain));
+        User user = QueryChain.of(User.class).where(USER.ID.eq(userId)).one();
+        setLog(organizationId, currentUserId, OperationLogType.DELETE.name(), Translator.get("delete") + Translator.get("organization_member_log") + ": " + user.getName(), REMOVE_MEMBER_PATH, user, null, logs);
+        operationLogService.batchAdd(logs);
     }
 
     @Override
@@ -318,6 +408,353 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
                 .where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)))
                 .groupBy(USER.ID).limit(1000).listAs(UserExtendDTO.class);
 
+    }
+
+    @Override
+    public void addMemberByOrg(OrganizationMemberExtendRequest organizationMemberExtendRequest, String currentUserId) {
+        String organizationId = organizationMemberExtendRequest.getOrganizationId();
+        checkOrgExistById(organizationId);
+        Map<String, User> userMap;
+        userMap = getUserMap(organizationMemberExtendRequest);
+        Map<String, UserRole> userRoleMap = checkUseRoleExist(organizationMemberExtendRequest.getUserRoleIds(), organizationId);
+        setRelationByMemberAndGroupIds(organizationMemberExtendRequest, currentUserId, userMap, userRoleMap, true);
+    }
+
+    @Override
+    public void addMemberRole(OrganizationMemberExtendRequest organizationMemberExtendRequest, String userId) {
+        String organizationId = organizationMemberExtendRequest.getOrganizationId();
+        checkOrgExistById(organizationId);
+        Map<String, User> userMap;
+        userMap = getUserMap(organizationMemberExtendRequest);
+        Map<String, UserRole> userRoleMap = checkUseRoleExist(organizationMemberExtendRequest.getUserRoleIds(), organizationId);
+        //在新增组织成员与用户组和组织的关系
+        setRelationByMemberAndGroupIds(organizationMemberExtendRequest, userId, userMap, userRoleMap, false);
+    }
+
+    @Override
+    public void updateMember(OrganizationMemberUpdateRequest organizationMemberUpdateRequest, String createUserId) {
+        String organizationId = organizationMemberUpdateRequest.getOrganizationId();
+        //校验组织是否存在
+        checkOrgExistById(organizationId);
+        //校验用户是否存在
+        String memberId = organizationMemberUpdateRequest.getMemberId();
+        User user = QueryChain.of(User.class).where(USER.ID.eq(memberId)).oneOpt()
+                .orElseThrow(() -> new MSException(Translator.get("user.not.exist")));
+        List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(memberId)
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId))).list();
+        if (CollectionUtils.isEmpty(userRoleRelations)) {
+            throw new MSException(Translator.get("organization_member_not_exist"));
+        }
+        List<LogDTO> logDTOList = new ArrayList<>();
+        //更新用户组
+        List<String> userRoleIds = organizationMemberUpdateRequest.getUserRoleIds();
+        updateUserRoleRelation(createUserId, organizationId, user, userRoleIds, logDTOList);
+        //更新项目
+        List<String> projectIds = organizationMemberUpdateRequest.getProjectIds();
+        if (CollectionUtils.isNotEmpty(projectIds)) {
+            updateProjectUserRelation(createUserId, organizationId, user, projectIds, logDTOList);
+        } else {
+            List<Project> projects = QueryChain.of(Project.class).where(PROJECT.ORGANIZATION_ID.eq(organizationId)).list();
+            if (CollectionUtils.isNotEmpty(projects)) {
+                List<String> projectInDBInOrgIds = projects.stream().map(Project::getId).toList();
+                QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(memberId)
+                        .and(USER_ROLE_RELATION.SOURCE_ID.in(projectInDBInOrgIds)));
+                LogicDeleteManager.execWithoutLogicDelete(() -> userRoleRelationMapper.deleteByQuery(queryChain));
+                //add Log
+                for (String projectInDBInOrgId : projectInDBInOrgIds) {
+                    String path = "/organization/update-member";
+                    LogDTO dto = new LogDTO(
+                            projectInDBInOrgId,
+                            organizationId,
+                            memberId,
+                            createUserId,
+                            OperationLogType.UPDATE.name(),
+                            OperationLogModule.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
+                            user.getName());
+                    setLog(dto, path, logDTOList, "");
+                }
+            }
+        }
+        //写入操作日志
+        operationLogService.batchAdd(logDTOList);
+    }
+
+    @Override
+    public void addMemberToProject(OrgMemberExtendProjectRequest orgMemberExtendProjectRequest, String userId) {
+        String requestOrganizationId = orgMemberExtendProjectRequest.getOrganizationId();
+        checkOrgExistById(requestOrganizationId);
+        List<LogDTO> logDTOList = new ArrayList<>();
+        List<String> projectIds = orgMemberExtendProjectRequest.getProjectIds();
+        //用户不在当前组织内过掉
+        Map<String, User> userMap;
+        if (orgMemberExtendProjectRequest.isSelectAll()) {
+            OrganizationRequest organizationRequest = new OrganizationRequest();
+            BeanUtils.copyProperties(orgMemberExtendProjectRequest, organizationRequest);
+            List<OrgUserExtend> orgUserExtends = mapper.selectListByQueryAs(listMemberByOrgQuery(organizationRequest), OrgUserExtend.class);
+            List<String> excludeIds = orgMemberExtendProjectRequest.getExcludeIds();
+            if (CollectionUtils.isNotEmpty(excludeIds)) {
+                userMap = orgUserExtends.stream().filter(user -> !excludeIds.contains(user.getId())).collect(Collectors.toMap(User::getId, user -> user));
+            } else {
+                userMap = orgUserExtends.stream().collect(Collectors.toMap(User::getId, user -> user));
+            }
+        } else {
+            userMap = checkUserExist(orgMemberExtendProjectRequest.getMemberIds());
+        }
+        List<String> userIds = userMap.values().stream().map(User::getId).toList();
+        userIds.forEach(memberId -> {
+            projectIds.forEach(projectId -> {
+                //过滤已存在的关系
+                List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class)
+                        .where(USER_ROLE_RELATION.SOURCE_ID.eq(projectId)
+                                .and(USER_ROLE_RELATION.USER_ID.eq(memberId)))
+                        .list();
+                if (CollectionUtils.isEmpty(userRoleRelations)) {
+                    UserRoleRelation userRoleRelation = buildUserRoleRelation(userId, memberId, projectId, InternalUserRole.PROJECT_MEMBER.getValue(), requestOrganizationId);
+                    userRoleRelation.setOrganizationId(orgMemberExtendProjectRequest.getOrganizationId());
+                    userRoleRelationMapper.insert(userRoleRelation);
+                    //add Log
+                    LogDTO dto = new LogDTO(
+                            projectId,
+                            requestOrganizationId,
+                            memberId,
+                            userId,
+                            OperationLogType.ADD.name(),
+                            OperationLogModule.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
+                            "");
+                    setLog(dto, "/organization/project/add-member", logDTOList, userRoleRelation);
+                }
+            });
+        });
+        operationLogService.batchAdd(logDTOList);
+    }
+
+    @Override
+    public List<LogDTO> batchDelLog(String organizationId, String userId) {
+        List<String> projectIds = getProjectIds(organizationId);
+        List<LogDTO> dtoList = new ArrayList<>();
+        User user = userMapper.selectOneById(userId);
+        if (CollectionUtils.isNotEmpty(projectIds)) {
+            List<UserRoleRelation> userRoleWidthProjectRelations = QueryChain.of(UserRoleRelation.class)
+                    .where(USER_ROLE_RELATION.USER_ID.eq(user).and(USER_ROLE_RELATION.SOURCE_ID.in(projectIds))).list();
+            //记录项目日志
+            for (UserRoleRelation userRoleWidthProjectRelation : userRoleWidthProjectRelations) {
+                LogDTO dto = new LogDTO(
+                        userRoleWidthProjectRelation.getSourceId(),
+                        organizationId,
+                        userId,
+                        userRoleWidthProjectRelation.getCreateUser(),
+                        OperationLogType.DELETE.name(),
+                        OperationLogModule.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
+                        user.getName());
+
+                dto.setPath("/organization/remove-member/{organizationId}/{userId}");
+                dto.setMethod(HttpMethodConstants.POST.name());
+                dto.setOriginalValue(JSON.toJSONBytes(userRoleWidthProjectRelation));
+                dtoList.add(dto);
+            }
+        }
+        List<UserRoleRelation> userRoleWidthOrgRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(userId)
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId))).list();
+        //记录组织日志
+        for (UserRoleRelation userRoleWidthOrgRelation : userRoleWidthOrgRelations) {
+            LogDTO dto = new LogDTO(
+                    OperationLogConstants.ORGANIZATION,
+                    organizationId,
+                    userRoleWidthOrgRelation.getId(),
+                    userRoleWidthOrgRelation.getCreateUser(),
+                    OperationLogType.DELETE.name(),
+                    OperationLogModule.SETTING_ORGANIZATION_MEMBER,
+                    user.getName());
+
+            dto.setPath("/organization/remove-member/{organizationId}/{userId}");
+            dto.setMethod(HttpMethodConstants.POST.name());
+            dto.setOriginalValue(JSON.toJSONBytes(userRoleWidthOrgRelation));
+            dtoList.add(dto);
+        }
+        return dtoList;
+    }
+
+    @Override
+    public List<OptionDTO> getUserRoleList(String organizationId) {
+        checkOrgExistById(organizationId);
+        List<String> scopeIds = Arrays.asList(UserRoleEnum.GLOBAL.toString(), organizationId);
+        List<OptionDTO> userRoleList = new ArrayList<>();
+        List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.TYPE.eq(UserRoleType.ORGANIZATION.toString())
+                .and(USER_ROLE.SCOPE_ID.in(scopeIds))).list();
+        setUserRoleList(userRoleList, userRoles);
+        return userRoleList;
+    }
+
+    @Override
+    public List<OptionDisabledDTO> getUserList(String organizationId, String keyword) {
+        checkOrgExistById(organizationId);
+        List<OptionDisabledDTO> optionDisabledDTOS = QueryChain.of(User.class)
+                .select(USER.ID,USER.EMAIL,USER.NAME).from(USER)
+                .where(USER.NAME.like(keyword).or(USER.EMAIL.like(keyword)).or(USER.PHONE.like(keyword)))
+                .orderBy(USER.UPDATE_TIME.desc()).limit(1000)
+                .listAs(OptionDisabledDTO.class);
+        List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)).list();
+        List<String> userIds = userRoleRelations.stream().map(UserRoleRelation::getUserId).distinct().toList();
+        for (OptionDisabledDTO optionDisabledDTO : optionDisabledDTOS) {
+            if (CollectionUtils.isNotEmpty(userIds) && userIds.contains(optionDisabledDTO.getId())) {
+                optionDisabledDTO.setDisabled(true);
+            }
+        }
+        return optionDisabledDTOS;
+    }
+
+    @Override
+    public List<OptionDTO> getProjectList(String organizationId, String keyword) {
+        checkOrgExistById(organizationId);
+        return QueryChain.of(Project.class)
+                .select(PROJECT.ID, PROJECT.NAME).from(PROJECT)
+                .where(PROJECT.ORGANIZATION_ID.eq(organizationId).and(PROJECT.NAME.like(keyword)))
+                .listAs(OptionDTO.class);
+    }
+
+    private void updateProjectUserRelation(String createUserId, String organizationId, User user, List<String> projectIds, List<LogDTO> logDTOList) {
+        Map<String, Project> projectMap = checkProjectExist(projectIds, organizationId);
+        List<String> projectInDBInOrgIds = projectMap.values().stream().map(Project::getId).toList();
+        //删除旧的关系
+        String memberId = user.getId();
+        List<Project> projects = QueryChain.of(Project.class).where(PROJECT.ORGANIZATION_ID.eq(organizationId)).list();
+        List<String> projectIdsAll = projects.stream().map(Project::getId).toList();
+        QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(memberId)
+                .and(USER_ROLE_RELATION.SOURCE_ID.in(projectIdsAll)));
+        LogicDeleteManager.execWithoutLogicDelete(() -> userRoleRelationMapper.deleteByQuery(queryChain));
+        projectInDBInOrgIds.forEach(projectId -> {
+            UserRoleRelation userRoleRelation = buildUserRoleRelation(createUserId, memberId, projectId, InternalUserRole.PROJECT_MEMBER.getValue(), organizationId);
+            userRoleRelation.setOrganizationId(organizationId);
+            userRoleRelationMapper.insert(userRoleRelation);
+            //add Log
+            String path = "/organization/update-member";
+            LogDTO dto = new LogDTO(
+                    projectId,
+                    organizationId,
+                    memberId,
+                    createUserId,
+                    OperationLogType.UPDATE.name(),
+                    OperationLogModule.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
+                    user.getName());
+            setLog(dto, path, logDTOList, userRoleRelation);
+        });
+    }
+
+    private Map<String, Project> checkProjectExist(List<String> projectIds, String organizationId) {
+        List<Project> projects = QueryChain.of(Project.class).where(PROJECT.ID.in(projectIds)
+                .and(PROJECT.ORGANIZATION_ID.eq(organizationId))).list();
+        if (CollectionUtils.isEmpty(projects)) {
+            throw new MSException(Translator.get("project_not_exist"));
+        }
+        return projects.stream().collect(Collectors.toMap(Project::getId, project -> project));
+    }
+
+    private void updateUserRoleRelation(String createUserId, String organizationId, User user, List<String> userRoleIds, List<LogDTO> logDTOList) {
+        //检查用户组是否是组织级别用户组
+        String memberId = user.getId();
+        Map<String, UserRole> userRoleMap = checkUseRoleExist(userRoleIds, organizationId);
+        List<String> userRoleInDBInOrgIds = userRoleMap.values().stream().map(UserRole::getId).toList();
+        //删除旧的关系
+        QueryChain<UserRoleRelation> queryChain = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(memberId)
+                .and(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)));
+        LogicDeleteManager.execWithoutLogicDelete(() -> userRoleRelationMapper.deleteByQuery(queryChain));
+        userRoleInDBInOrgIds.forEach(userRoleId -> {
+            UserRoleRelation userRoleRelation = buildUserRoleRelation(createUserId, memberId, organizationId, userRoleId, organizationId);
+            userRoleRelation.setOrganizationId(organizationId);
+            userRoleRelationMapper.insert(userRoleRelation);
+            //add Log
+            String path = "/organization/update-member";
+            LogDTO dto = new LogDTO(
+                    OperationLogConstants.ORGANIZATION,
+                    organizationId,
+                    memberId,
+                    createUserId,
+                    OperationLogType.UPDATE.name(),
+                    OperationLogModule.SETTING_ORGANIZATION_MEMBER,
+                    user.getName());
+            setLog(dto, path, logDTOList, userRoleRelation);
+        });
+    }
+
+    private void setRelationByMemberAndGroupIds(OrganizationMemberExtendRequest organizationMemberExtendRequest, String createUserId, Map<String, User> userMap, Map<String, UserRole> userRoleMap, boolean add) {
+        List<LogDTO> logDTOList = new ArrayList<>();
+        String organizationId = organizationMemberExtendRequest.getOrganizationId();
+        userMap.keySet().forEach(memberId -> {
+            if (userMap.get(memberId) == null) {
+                throw new MSException("id:" + memberId + Translator.get("user.not.exist"));
+            }
+            organizationMemberExtendRequest.getUserRoleIds().forEach(userRoleId -> {
+                if (Objects.nonNull(userRoleMap.get(userRoleId))) {
+                    List<UserRoleRelation> userRoleRelations = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.SOURCE_ID.eq(organizationId)
+                            .and(USER_ROLE_RELATION.USER_ID.eq(memberId))
+                            .and(USER_ROLE_RELATION.ROLE_ID.eq(userRoleId))).list();
+                    if (CollectionUtils.isEmpty(userRoleRelations)) {
+                        UserRoleRelation userRoleRelation = buildUserRoleRelation(createUserId, memberId, organizationId, userRoleId, organizationId);
+                        userRoleRelation.setOrganizationId(organizationId);
+                        userRoleRelationMapper.insert(userRoleRelation);
+                        //add Log
+                        String path = add ? "/organization/add-member" : "/organization/role/update-member";
+                        String type = add ? OperationLogType.ADD.name() : OperationLogType.UPDATE.name();
+                        LogDTO dto = new LogDTO(
+                                OperationLogConstants.ORGANIZATION,
+                                organizationId,
+                                memberId,
+                                createUserId,
+                                type,
+                                OperationLogModule.SETTING_ORGANIZATION_MEMBER,
+                                userMap.get(memberId).getName());
+                        setLog(dto, path, logDTOList, userRoleRelation);
+                    }
+                }
+            });
+        });
+        //写入操作日志
+        operationLogService.batchAdd(logDTOList);
+    }
+
+    private UserRoleRelation buildUserRoleRelation(String createUserId, String memberId, String sourceId, String roleId, String organizationId) {
+        UserRoleRelation userRoleRelation = new UserRoleRelation();
+        userRoleRelation.setUserId(memberId);
+        userRoleRelation.setOrganizationId(organizationId);
+        userRoleRelation.setSourceId(sourceId);
+        userRoleRelation.setRoleId(roleId);
+        userRoleRelation.setCreateUser(createUserId);
+        return userRoleRelation;
+    }
+
+    private static void setLog(LogDTO dto, String path, List<LogDTO> logDTOList, Object originalValue) {
+        dto.setPath(path);
+        dto.setMethod(HttpMethodConstants.POST.name());
+        dto.setOriginalValue(JSON.toJSONBytes(originalValue));
+        logDTOList.add(dto);
+    }
+
+    private Map<String, UserRole> checkUseRoleExist(List<String> userRoleIds, String organizationId) {
+        List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.ID.in(userRoleIds)
+                .and(USER_ROLE.TYPE.eq(UserRoleType.ORGANIZATION.toString()))
+                .and(USER_ROLE.SCOPE_ID.in(Arrays.asList(UserRoleEnum.GLOBAL.toString(), organizationId)))).list();
+        if (CollectionUtils.isEmpty(userRoles)) {
+            throw new MSException(Translator.get("user_role_not_exist"));
+        }
+        return userRoles.stream().collect(Collectors.toMap(UserRole::getId, user -> user));
+    }
+
+    private Map<String, User> getUserMap(OrganizationMemberExtendRequest organizationMemberExtendRequest) {
+        Map<String, User> userMap;
+        if (organizationMemberExtendRequest.isSelectAll()) {
+            OrganizationRequest organizationRequest = new OrganizationRequest();
+            BeanUtils.copyProperties(organizationMemberExtendRequest, organizationRequest);
+            List<UserExtendDTO> userExtends = mapper.selectListByQueryAs(listMemberByOrgQuery(organizationRequest), UserExtendDTO.class);
+            List<String> excludeIds = organizationMemberExtendRequest.getExcludeIds();
+            if (CollectionUtils.isNotEmpty(excludeIds)) {
+                userMap = userExtends.stream().filter(user -> !excludeIds.contains(user.getId())).collect(Collectors.toMap(User::getId, user -> user));
+            } else {
+                userMap = userExtends.stream().collect(Collectors.toMap(User::getId, user -> user));
+            }
+        } else {
+            userMap = checkUserExist(organizationMemberExtendRequest.getMemberIds());
+        }
+        return userMap;
     }
 
     private void setLog(String organizationId, String createUser, String type, String content, String path, Object originalValue, Object modifiedValue, List<LogDTO> logs) {

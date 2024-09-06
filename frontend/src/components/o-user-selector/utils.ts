@@ -6,6 +6,7 @@ import {
 import {getOrgUserGroupOption, getSystemUserGroupOption} from "/@/api/modules/setting/user-group.ts";
 import {useRequest} from "alova/client";
 import {getProjectUserGroupOptions} from "/@/api/modules/project-management/user-group.ts";
+import {getProjectList, getUser} from "/@/api/modules/setting/member.ts";
 
 export enum UserRequestTypeEnum {
     SYSTEM_USER_GROUP = 'SYSTEM_USER_GROUP',
@@ -48,5 +49,13 @@ export default function initOptionsFunc(type: string, params: Record<string, any
     if (type === UserRequestTypeEnum.SYSTEM_ORGANIZATION || type === UserRequestTypeEnum.SYSTEM_PROJECT) {
         // 系统 -【组织 或 项目】-添加成员-下拉选项
         return useRequest(() => getUserByOrganizationOrProject(params.sourceId, params.keyword), {force: true}).send();
+    }
+    if (type === UserRequestTypeEnum.SYSTEM_ORGANIZATION_PROJECT) {
+        // 系统 -【组织 或 项目】-添加成员-下拉选项
+        return useRequest(() => getProjectList(params.organizationId, params.keyword), {force: true}).send();
+    }
+    if (type === UserRequestTypeEnum.SYSTEM_ORGANIZATION_MEMBER) {
+        // 系统 -【组织 或 项目】-添加成员-下拉选项
+        return useRequest(() => getUser(params.organizationId, params.keyword), {force: true}).send();
     }
 }

@@ -23,12 +23,18 @@ interface IProps {
   placeholder?: string;
   disabledKey?: string; // 禁用的key
   loadOptionParams?: ILoadOptionParams; // 禁用的key
+  valueKey?: string; // value的key
+  firstLabelKey?: string; // 首要的的字段key
+  secondLabelKey?: string; // 次要的字段key
 }
 
 const props = withDefaults(defineProps<IProps>(), {
   mode: 'static',
   type: UserRequestTypeEnum.SYSTEM_USER_GROUP,
   disabledKey: 'exclude',
+  valueKey: 'id',
+  firstLabelKey: 'name',
+  secondLabelKey: 'email',
 })
 const currentValue = defineModel<(string | number)[]>('modelValue', {default: []});
 const innerValue = ref<string[]>([]);

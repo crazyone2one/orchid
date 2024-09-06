@@ -86,7 +86,9 @@ const noRemindHandler = () => {
                 type="primary">
         {{ t('system.orgTemplate.addField') }}
       </n-button>
-      <n-input :placeholder="t('system.orgTemplate.searchTip')" clearable class="w-[230px]"/>
+      <div>
+        <n-input :placeholder="t('system.orgTemplate.searchTip')" clearable class="w-[230px]"/>
+      </div>
     </div>
     <n-data-table :data="[]"/>
   </div>

@@ -1,12 +1,10 @@
 package cn.master.backend.service;
 
 import cn.master.backend.entity.Organization;
-import cn.master.backend.payload.dto.system.OptionDTO;
-import cn.master.backend.payload.dto.system.OrganizationDTO;
+import cn.master.backend.payload.dto.system.*;
 import cn.master.backend.payload.dto.system.request.OrganizationRequest;
 import cn.master.backend.payload.dto.user.UserExtendDTO;
-import cn.master.backend.payload.request.system.OrganizationMemberBatchRequest;
-import cn.master.backend.payload.request.system.OrganizationMemberRequest;
+import cn.master.backend.payload.request.system.*;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
@@ -21,7 +19,7 @@ import java.util.Map;
  */
 public interface OrganizationService extends IService<Organization> {
 
-    Page<Organization> getMemberListByOrg(OrganizationRequest request);
+    Page<OrgUserExtend> getMemberListByOrg(OrganizationRequest request);
 
     Page<OrganizationDTO> list(OrganizationRequest request);
 
@@ -54,4 +52,20 @@ public interface OrganizationService extends IService<Organization> {
     Organization checkResourceExist(String scopeId);
 
     List<UserExtendDTO> getMemberOption(String sourceId, String keyword);
+
+    void addMemberByOrg(OrganizationMemberExtendRequest organizationMemberExtendRequest, String currentUserId);
+
+    void addMemberRole(OrganizationMemberExtendRequest organizationMemberExtendRequest, String userId);
+
+    void updateMember(OrganizationMemberUpdateRequest organizationMemberExtendRequest, String userId);
+
+    void addMemberToProject(OrgMemberExtendProjectRequest orgMemberExtendProjectRequest, String userId);
+
+    List<LogDTO> batchDelLog(String organizationId, String userId);
+
+    List<OptionDTO> getProjectList(String organizationId, String keyword);
+
+    List<OptionDTO> getUserRoleList(String organizationId);
+
+    List<OptionDisabledDTO> getUserList(String organizationId, String keyword);
 }
