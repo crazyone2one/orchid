@@ -74,15 +74,15 @@ watch(
     }
 );
 
-watch(
-    () => currentVisible.value,
-    (val) => {
-      if (!val) {
-        emits('cancel');
-      }
-      emits('update:visible', val);
-    }
-);
+// watch(
+//     () => currentVisible.value,
+//     (val) => {
+//       if (!val) {
+//         emits('cancel');
+//       }
+//       emits('update:visible', val);
+//     }
+// );
 </script>
 
 <template>

@@ -89,7 +89,9 @@ watchEffect(() => {
 </script>
 
 <template>
-  <n-modal v-model:show="showModal" preset="dialog" title="Dialog" @close="handleCancel(false)">
+  <n-modal v-model:show="showModal" preset="dialog" title="Dialog"
+           :mask-closable="false"
+           @close="handleCancel(false)">
     <template #header>
       <div> {{ t('system.userGroup.addUser') }}</div>
     </template>

@@ -332,7 +332,9 @@ defineExpose({
       </div>
       <Transition>
         <div v-if="orgToggle">
-          <div v-for="item in orgUserGroupList" :key="item.id" @click="handleListItemClick(item)">
+          <div v-for="item in orgUserGroupList" :key="item.id"
+               :class="{ '!bg-green-200': item.id === currentId }"
+               @click="handleListItemClick(item)">
             <create-or-update-user-group :list="orgUserGroupList"
                                          v-bind="popVisible[item.id]"
                                          @cancel="handleRenameCancel(item)"
@@ -363,7 +365,7 @@ defineExpose({
                      class="list-item-action flex flex-row items-center gap-[8px] opacity-0"
                      :class="{ '!opacity-100': item.id === currentId }">
                   <div v-if="item.type === systemType" class="icon-button">
-                    <div v-permission="props.updatePermission" class="i-carbon-add-alt"/>
+                    <div v-permission="props.updatePermission" class="i-carbon-add-alt" @click="handleAddMember"/>
                   </div>
                   <more-action
                       v-if="isOrdShowAll && !item.internal && (item.scopeId !== 'global' || !isGlobalDisable) && orgMoreAction.length > 0"
@@ -413,8 +415,9 @@ defineExpose({
                                          v-bind="popVisible[item.id]"
                                          @cancel="handleRenameCancel(item)"
                                          @submit="handleRenameCancel(item, item.id)">
-              <div class="flex max-w-[100%] grow flex-row items-center justify-between" :class="{ '!bg-green-200': item.id === currentId }">
-                <div class="list-item-name one-line-text" >{{ item.name }}</div>
+              <div class="flex max-w-[100%] grow flex-row items-center justify-between"
+                   :class="{ '!bg-green-200': item.id === currentId }">
+                <div class="list-item-name one-line-text">{{ item.name }}</div>
                 <div v-if="item.type === systemType ||
                     (isProjectShowAll &&
                       !item.internal &&
@@ -437,7 +440,8 @@ defineExpose({
       </Transition>
     </div>
   </div>
-  <add-user-modal ref="addUserModalRef" :visible="userModalVisible" :current-id="currentItem.id" @cancel="handleAddUserCancel"/>
+  <add-user-modal ref="addUserModalRef" :visible="userModalVisible" :current-id="currentItem.id"
+                  @cancel="handleAddUserCancel"/>
 </template>
 
 <style scoped>

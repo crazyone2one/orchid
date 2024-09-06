@@ -60,16 +60,19 @@ const columns: DataTableColumns<UserTableItem> = [
       //   subTitleTip: t('system.userGroup.removeTip'),
       //   onOk: () => handleRemove(row)
       // }, {}), [[permission, props.updatePermission || []]])
-      return h(RemoveButton, {
-        title: t('system.userGroup.removeName', {name: characterLimit(row.name)}),
-        subTitleTip: t('system.userGroup.removeTip'),
-        onOk: () => handleRemove(row)
-      }, {})
+      return [
+        h(RemoveButton, {
+          title: t('system.userGroup.removeName', {name: characterLimit(row.name)}),
+          subTitleTip: t('system.userGroup.removeTip'),
+          disabled: systemType === AuthScopeEnum.SYSTEM && row.userId === 'admin',
+          onOk: () => handleRemove(row)
+        }, {})
+      ];
     }
   }];
 const reqParam = ref<TableQueryParams>({
   current: 1,
-  pageSize: 6,
+  pageSize: 10,
   keyword: ''
 })
 const {

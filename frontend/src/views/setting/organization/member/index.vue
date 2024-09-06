@@ -92,19 +92,21 @@ const columns: DataTableColumns<MemberItem> = [
     key: 'operation', fixed: 'right',
     width: hasOrdMemberOperationPermission.value ? 140 : 50,
     render: (record) => {
-      return [
-        withDirectives(h(NButton, {
-              text: true, type: 'primary',
-              onClick: () => addOrEditMember('edit', record)
-            }, {default: () => t('organization.member.edit')}),
-            [[permission, ['ORGANIZATION_MEMBER:READ+UPDATE']]]),
-        withDirectives(h(RemoveButton, {
-                  title: t('organization.member.deleteMemberTip', {name: characterLimit(record.name)}),
-                  subTitleTip: t('organization.member.subTitle')
-                },
-                {default: () => t('organization.member.edit')}),
-            [[permission, ['ORGANIZATION_MEMBER:READ+DELETE']]])
-      ]
+      return h("div", {class: 'flex items-center'}, {
+        default: () => [
+          withDirectives(h(NButton, {
+                text: true, type: 'primary',
+                onClick: () => addOrEditMember('edit', record)
+              }, {default: () => t('organization.member.edit')}),
+              [[permission, ['ORGANIZATION_MEMBER:READ+UPDATE']]]),
+          withDirectives(h(RemoveButton, {
+                    title: t('organization.member.deleteMemberTip', {name: characterLimit(record.name)}),
+                    subTitleTip: t('organization.member.subTitle')
+                  },
+                  {}),
+              [[permission, ['ORGANIZATION_MEMBER:READ+DELETE']]])
+        ]
+      })
     },
   },
 ]

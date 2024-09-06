@@ -63,6 +63,9 @@ export const alovaInstance = createAlova({
                     case 401:
                         window.$message.error(`${response.statusText}` || t('api.errMsg401'))
                         break;
+                    case 403:
+                        window.$message.error(t('api.errMsg403') )
+                        break;
                     case 404:
                         window.$message.error(`${response.statusText}` || t('api.errMsg404'))
                         break;

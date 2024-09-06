@@ -48,11 +48,13 @@ const handleOk = () => {
                  :ok-text="props.okText"
                  @confirm="handleOk"
                  @cancel="handleCancel">
-      <slot>
-        <n-button text :disabled="props.disabled" @click="showPopover">
+      <template #trigger>
+         <slot>
+        <n-button text type="error" :disabled="props.disabled" @click="showPopover">
         {{ $t(props.removeText) }}
         </n-button>
       </slot>
+      </template>
     </pop-confirm>
   </span>
 </template>
