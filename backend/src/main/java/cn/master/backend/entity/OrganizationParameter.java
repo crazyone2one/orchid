@@ -31,20 +31,19 @@ public class OrganizationParameter implements Serializable {
     /**
      * id
      */
+    @Id
     @Schema(description = "id")
     private String id;
 
     /**
      * 项目ID
      */
-    @Id
     @Schema(description = "项目ID")
     private String organizationId;
 
     /**
      * 配置项
      */
-    @Id
     @Schema(description = "配置项")
     private String paramKey;
 

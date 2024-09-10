@@ -1,7 +1,8 @@
 package cn.master.backend.service;
 
-import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.CustomFieldOption;
+import cn.master.backend.payload.request.system.CustomFieldOptionRequest;
+import com.mybatisflex.core.service.IService;
 
 import java.util.List;
 
@@ -16,4 +17,12 @@ public interface BaseCustomFieldOptionService extends IService<CustomFieldOption
     List<CustomFieldOption> getByFieldId(String id);
 
     List<CustomFieldOption> getByFieldIds(List<String> fieldIds);
+
+    void addByFieldId(String fieldId, List<CustomFieldOption> customFieldOptions);
+
+    void updateByFieldId(String fieldId, List<CustomFieldOptionRequest> customFieldOptionRequests);
+
+    void deleteByFieldId(String fieldId);
+
+    void deleteByFieldIds(List<String> fieldIds);
 }

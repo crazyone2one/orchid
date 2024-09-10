@@ -1,4 +1,4 @@
-package cn.master.backend.controller.system;
+package cn.master.backend.controller.project;
 
 import cn.master.backend.constants.OperationLogType;
 import cn.master.backend.constants.PermissionConstants;

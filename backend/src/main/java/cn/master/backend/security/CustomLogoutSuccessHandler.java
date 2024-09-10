@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Objects;
 
 /**
  * @author Created by 11's papa on 08/28/2024
@@ -20,9 +21,11 @@ import java.io.PrintWriter;
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String username = userDetails.getUsername();
-        log.info("username: {}  is offline now", username);
+        if (Objects.nonNull(authentication)) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String username = userDetails.getUsername();
+            log.info("username: {}  is offline now", username);
+        }
         responseJsonWriter(response, ResultHolder.success("退出成功"));
     }
 

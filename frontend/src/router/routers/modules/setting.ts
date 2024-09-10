@@ -150,6 +150,48 @@ const Setting: AppRouteRecordRaw = {
                         isTopMenu: true,
                     },
                 },
+                {
+                    path: 'templateFiledSetting',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_FILED_SETTING,
+                    component: () => import('/@/views/setting/organization/template/components/OrgFieldSetting.vue'),
+                    meta: {
+                        locale: 'menu.settings.organization.templateFieldSetting',
+                        roles: ['ORGANIZATION_TEMPLATE:READ'],
+                        breadcrumbs: [
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
+                                locale: 'menu.settings.organization.template',
+                            },
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_FILED_SETTING,
+                                locale: 'menu.settings.organization.templateFieldSetting',
+                                editLocale: 'menu.settings.organization.templateFieldSetting',
+                                query: ['type'],
+                            },
+                        ],
+                    },
+                },
+                {
+                    path: 'templateManagement',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_MANAGEMENT,
+                    component: () => import('/@/views/setting/organization/template/components/TemplateManagement.vue'),
+                    meta: {
+                        locale: 'menu.settings.organization.templateManagementList',
+                        roles: ['ORGANIZATION_TEMPLATE:READ'],
+                        breadcrumbs: [
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
+                                locale: 'menu.settings.organization.template',
+                            },
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_MANAGEMENT,
+                                locale: 'menu.settings.organization.templateManagementList',
+                                editLocale: 'menu.settings.organization.templateManagementList',
+                                query: ['type'],
+                            },
+                        ],
+                    },
+                }
             ]
         }
     ]

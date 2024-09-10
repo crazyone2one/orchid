@@ -81,7 +81,7 @@ watch(
 <template>
   <n-drawer v-model:show="active" v-bind="props" :class="'ms-drawer'"
             :mask-closable="false"
-            @after-leave="handleClose">
+            @after-leave="handleCancel">
     <n-drawer-content :native-scrollbar="false" closable>
       <template #header>
         <div class="flex items-center justify-between gap-[4px]">

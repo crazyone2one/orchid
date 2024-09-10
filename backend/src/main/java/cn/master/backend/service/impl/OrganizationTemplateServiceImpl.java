@@ -148,7 +148,7 @@ public class OrganizationTemplateServiceImpl extends BaseTemplateServiceImpl imp
     @Transactional(rollbackOn = Exception.class)
     public void disableOrganizationTemplate(String orgId, String scene) {
         if (StringUtils.isBlank(baseOrganizationParameterService.getValue(orgId, scene))) {
-            OrganizationParameter organizationParameter = new OrganizationParameter();
+            OrganizationParameter organizationParameter = OrganizationParameter.builder().build();
             organizationParameter.setOrganizationId(orgId);
             organizationParameter.setParamKey(baseOrganizationParameterService.getOrgTemplateEnableKeyByScene(scene));
             organizationParameter.setParamValue(BooleanUtils.toStringTrueFalse(false));

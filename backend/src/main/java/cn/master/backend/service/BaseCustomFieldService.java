@@ -1,13 +1,11 @@
 package cn.master.backend.service;
 
-import cn.master.backend.validation.Created;
-import cn.master.backend.validation.Updated;
+import cn.master.backend.entity.CustomFieldOption;
+import cn.master.backend.payload.dto.system.CustomFieldDTO;
+import cn.master.backend.payload.request.system.CustomFieldOptionRequest;
 import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.CustomField;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,4 +26,20 @@ public interface BaseCustomFieldService extends IService<CustomField> {
     List<CustomField> getByRefIdsAndScopeId(List<String> fieldIds, String scopeId);
 
     String translateInternalField(String filedName);
+
+    List<CustomFieldDTO> list(String scopeId, String scene);
+
+    List<CustomField> getByScopeIdAndScene(String scopeId, String scene);
+
+    CustomFieldDTO getCustomFieldWithCheck(String id);
+
+    List<CustomFieldOption> parseCustomFieldOptionRequest2Option(List<CustomFieldOptionRequest> options);
+
+    CustomField baseAdd(CustomField customField, List<CustomFieldOption> customFieldOptions);
+
+    CustomField add(CustomField customField, List<CustomFieldOptionRequest> options);
+
+    CustomField update(CustomField customField, List<CustomFieldOptionRequest> options);
+
+    void delete(String id);
 }
