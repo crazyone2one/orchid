@@ -44,6 +44,20 @@ const titleClass = computed(() => {
 const form = ref({
   field: props.fieldConfig?.field || '',
 });
+const rules = {
+  field: [{required: true, message: t('popConfirm.nameNotNull')},
+    {
+      validator(_rule: FormItemRule, value: string) {
+        if ((props.allNames || []).includes(value)) {
+          if (props.fieldConfig && props.fieldConfig.nameExistTipText) {
+            return new Error(t(props.fieldConfig.nameExistTipText));
+          } else {
+            return new Error(t('popConfirm.nameExist'));
+          }
+        }
+      }
+    }]
+}
 const emits = defineEmits<{
   (e: 'confirm', formValue: ConfirmValue, cancel?: () => void): void;
   (e: 'cancel'): void;
@@ -74,15 +88,15 @@ watch(
     }
 );
 
-// watch(
-//     () => currentVisible.value,
-//     (val) => {
-//       if (!val) {
-//         emits('cancel');
-//       }
-//       emits('update:visible', val);
-//     }
-// );
+watch(
+    () => currentVisible.value,
+    (val) => {
+      if (!val) {
+        emits('cancel');
+      }
+      emits('update:visible', val);
+    }
+);
 </script>
 
 <template>
@@ -104,23 +118,16 @@ watch(
       {{ props.subTitleTip }}
     </div>
     <n-form v-else ref="formRef" :model="form"
-            :rules="props.fieldConfig?.rules ||[{ required: true, message: $t('popConfirm.nameNotNull') },
-            { validator(_rule: FormItemRule, value: string){
-              console.log(props.allNames)
-              if((props.allNames || []).includes(value)){
-                if(props.fieldConfig && props.fieldConfig.nameExistTipText){
-                  return new Error(t(props.fieldConfig.nameExistTipText));
-                }else {
-                  return new Error(t('popConfirm.nameExist'));
-                }
-              }
-            }}]">
+            :rules="props.fieldConfig?.rules || rules">
       <n-form-item path="field">
         <n-input v-if="props.fieldConfig?.isTextArea" v-model:value="form.field" type="textarea"
-                 :maxlength="props.fieldConfig?.maxLength || 1000" class="w-[245px]"
-                 :placeholder="props.fieldConfig?.placeholder"/>
+                 :maxlength="props.fieldConfig?.maxLength || 1000"
+                 :placeholder="props.fieldConfig?.placeholder"
+                 :autosize="{maxRows:4}"
+                 @keyup.enter="handleConfirm"/>
         <n-input v-else v-model:value="form.field" :maxlength="255" class="w-[245px]"
-                 :placeholder="props.fieldConfig?.placeholder"/>
+                 :placeholder="props.fieldConfig?.placeholder"
+                 @keyup.enter="handleConfirm"/>
       </n-form-item>
     </n-form>
     <div class="mb-1 mt-4 flex flex-row flex-nowrap justify-end gap-2">
