@@ -16,6 +16,7 @@ const CaseManagement: AppRouteRecordRaw = {
         roles: ['FUNCTIONAL_CASE:READ', 'CASE_REVIEW:READ'],
     },
     children: [
+        // 功能用例
         {
             path: 'featureCase',
             name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE,
@@ -24,6 +25,38 @@ const CaseManagement: AppRouteRecordRaw = {
                 locale: 'menu.caseManagementShort',
                 roles: ['FUNCTIONAL_CASE:READ'],
                 isTopMenu: true,
+            },
+        },
+        // 创建用例&编辑用例
+        {
+            path: 'featureCaseDetail/:mode?',
+            name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE_DETAIL,
+            component: () => import('/@/views/case-management/case-management-feature/components/CaseDetail.vue'),
+            meta: {
+                locale: 'menu.caseManagement.featureCaseDetail',
+                roles: ['FUNCTIONAL_CASE:READ+ADD', 'FUNCTIONAL_CASE:READ+UPDATE'],
+                breadcrumbs: [
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE,
+                        locale: 'menu.caseManagement.featureCase',
+                    },
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE_DETAIL,
+                        locale: 'menu.caseManagement.featureCaseDetail',
+                        editTag: 'id',
+                        editLocale: 'menu.caseManagement.featureCaseEdit',
+                    },
+                ],
+            },
+        },
+        // 创建用例成功
+        {
+            path: 'featureCaseCreateSuccess',
+            name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE_CREATE_SUCCESS,
+            component: () => import('/@/views/case-management/case-management-feature/components/CreateSuccess.vue'),
+            meta: {
+                locale: 'menu.caseManagement.featureCaseCreateSuccess',
+                roles: ['FUNCTIONAL_CASE:READ+ADD'],
             },
         },
         {

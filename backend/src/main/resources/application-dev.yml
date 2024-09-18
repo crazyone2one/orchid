@@ -36,9 +36,17 @@ logging:
   level:
     web: debug
     org.springframework.security: trace
+    org.springframework.jdbc.core: info
 mybatis-flex:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    print-banner: false
 springdoc:
   api-docs:
     enabled: true
+minio:
+  endpoint: http://172.16.2.17:9000
+  access-key: UAU9kdHtRrUzZJDh
+  secret-key: nTXkPFS4PMwvnIRJi0piUCPIPTcTxTzg
+  default-bucket-name: orchid

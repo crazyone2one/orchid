@@ -31,6 +31,7 @@ public class CustomFieldOption implements Serializable {
     /**
      * id
      */
+    @Id
     @Schema(description = "id")
     private String id;
 

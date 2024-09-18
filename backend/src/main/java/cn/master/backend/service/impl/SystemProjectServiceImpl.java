@@ -2,6 +2,7 @@ package cn.master.backend.service.impl;
 
 import cn.master.backend.constants.OperationLogModule;
 import cn.master.backend.constants.OperationLogType;
+import cn.master.backend.handler.invoker.ProjectServiceInvoker;
 import cn.master.backend.mapper.ProjectTestResourcePoolMapper;
 import cn.master.backend.mapper.UserMapper;
 import cn.master.backend.mapper.UserRoleRelationMapper;
@@ -27,19 +28,22 @@ import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
  **/
 @Service
 public class SystemProjectServiceImpl extends ProjectServiceImpl implements SystemProjectService {
-    public SystemProjectServiceImpl(ProjectTestResourcePoolMapper projectTestResourcePoolMapper,
-                                    UserRoleRelationMapper userRoleRelationMapper,
-                                    OperationLogService operationLogService,
-                                    UserMapper userMapper,
-                                    BaseUserRolePermissionService baseUserRolePermissionService) {
-        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService);
-    }
+
 
     private final static String PREFIX = "/system/project";
     private final static String ADD_PROJECT = PREFIX + "/add";
     private final static String UPDATE_PROJECT = PREFIX + "/update";
     private final static String REMOVE_PROJECT_MEMBER = PREFIX + "/remove-member/";
     private final static String ADD_MEMBER = PREFIX + "/add-member";
+
+    public SystemProjectServiceImpl(ProjectTestResourcePoolMapper projectTestResourcePoolMapper,
+                                    UserRoleRelationMapper userRoleRelationMapper,
+                                    OperationLogService operationLogService,
+                                    UserMapper userMapper,
+                                    BaseUserRolePermissionService baseUserRolePermissionService,
+                                    ProjectServiceInvoker serviceInvoker) {
+        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService, serviceInvoker);
+    }
 
     @Override
     @Transactional(rollbackOn = Exception.class)

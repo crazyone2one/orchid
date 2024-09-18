@@ -77,6 +77,7 @@ public class Template implements Serializable {
      */
     @Schema(description = "创建人")
     private String createUser;
+
     @Column(ignore = true)
     @RelationOneToOne(selfField = "createUser", targetField = "id", targetTable = "user")
     private String createUserName;

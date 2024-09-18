@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.TestPlanFollowerTableDef.TEST_PLAN_FOLLOWER;
+import static cn.master.backend.entity.table.TestPlanModuleTableDef.TEST_PLAN_MODULE;
 import static cn.master.backend.entity.table.TestPlanReportTableDef.TEST_PLAN_REPORT;
 import static cn.master.backend.entity.table.TestPlanTableDef.TEST_PLAN;
 import static cn.master.backend.entity.table.UserTableDef.USER;
@@ -520,6 +521,17 @@ public class TestPlanServiceImpl extends BaseTestPlanServiceImpl implements Test
             }
         }
         return queryChain.pageAs(Page.of(request.getCurrent(), request.getPageSize()), TestPlanExecuteHisDTO.class);
+    }
+
+    @Override
+    public void deleteByProjectId(String projectId) {
+        List<String> testPlanIdList = queryChain().where(TEST_PLAN.PROJECT_ID.eq(projectId)).list().stream().map(TestPlan::getId).toList();
+        //删除测试计划模块
+        LogicDeleteManager.execWithoutLogicDelete(() ->
+                testPlanModuleMapper.deleteByQuery(QueryChain.of(testPlanModuleMapper).where(TEST_PLAN_MODULE.PROJECT_ID.eq(projectId))));
+        SubListUtils.dealForSubList(testPlanIdList, SubListUtils.DEFAULT_BATCH_SIZE, dealList -> {
+            this.deleteByList(testPlanIdList);
+        });
     }
 
     private void handleTags(TestPlanBatchEditRequest request, String userId, List<String> ids) {

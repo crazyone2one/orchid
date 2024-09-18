@@ -121,4 +121,14 @@ public class ProjectApplicationServiceImpl extends ServiceImpl<ProjectApplicatio
             mapper.insert(application);
         }
     }
+
+    @Override
+    public void update(ProjectApplication application, String userId) {
+        doBeforeUpdate(application, userId);
+        createOrUpdateConfig(application);
+    }
+
+    private void doBeforeUpdate(ProjectApplication application, String userId) {
+
+    }
 }

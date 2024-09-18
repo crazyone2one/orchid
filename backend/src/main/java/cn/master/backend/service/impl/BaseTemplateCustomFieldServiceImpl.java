@@ -88,6 +88,14 @@ public class BaseTemplateCustomFieldServiceImpl extends ServiceImpl<TemplateCust
         LogicDeleteManager.execWithoutLogicDelete(() -> mapper.deleteByQuery(queryChain));
     }
 
+    @Override
+    public List<TemplateCustomField> getByTemplateIds(List<String> projectTemplateIds) {
+        if (projectTemplateIds.isEmpty()) {
+            return List.of();
+        }
+        return queryChain().where(TemplateCustomField::getTemplateId).in(projectTemplateIds).list();
+    }
+
     private void addByTemplateId(String templateId, List<TemplateCustomFieldRequest> customFieldRequests, boolean isSystem) {
         AtomicReference<Integer> pos = new AtomicReference<>(0);
         List<TemplateCustomField> templateCustomFields = customFieldRequests.stream().map(field -> {

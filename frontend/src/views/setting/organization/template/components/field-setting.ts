@@ -28,24 +28,24 @@ export function getCardList(type: string): Record<string, any>[] {
             value: TemplateCardEnum.FUNCTIONAL,
             name: t("system.orgTemplate.caseTemplates"),
         },
-        /* {
-              id: 1002,
-              key: 'API',
-              value: TemplateCardEnum.API,
-              name: t('system.orgTemplate.APITemplates'),
-            }, */
-        // {
-        //   id: 1003,
-        //   key: 'UI',
-        //   value: TemplateCardEnum.UI,
-        //   name: t('system.orgTemplate.UITemplates'),
-        // },
-        // {
-        //   id: 1004,
-        //   key: 'TEST_PLAN',
-        //   value: TemplateCardEnum.TEST_PLAN,
-        //   name: t('system.orgTemplate.testPlanTemplates'),
-        // },
+        {
+            id: 1002,
+            key: 'API',
+            value: TemplateCardEnum.API,
+            name: t('system.orgTemplate.APITemplates'),
+        },
+        {
+            id: 1003,
+            key: 'UI',
+            value: TemplateCardEnum.UI,
+            name: t('system.orgTemplate.UITemplates'),
+        },
+        {
+            id: 1004,
+            key: 'TEST_PLAN',
+            value: TemplateCardEnum.TEST_PLAN,
+            name: t('system.orgTemplate.testPlanTemplates'),
+        },
         {
             id: 1005,
             key: "BUG",
@@ -186,3 +186,8 @@ export const dateOptions: { label: string; value: FormItemType }[] = [
         value: 'DATETIME',
     },
 ];
+
+export function getTemplateName(type: string, scene: string) {
+    const dataList = getCardList(type);
+    return dataList.find((item) => item.key === scene)?.name;
+}

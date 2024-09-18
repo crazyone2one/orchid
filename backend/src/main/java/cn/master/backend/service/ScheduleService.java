@@ -26,4 +26,6 @@ public interface ScheduleService extends IService<Schedule> {
     void updateIfExist(String resourceId, boolean enable, JobKey jobKey, TriggerKey triggerKey, Class clazz, String operator);
 
     String scheduleConfig(ScheduleConfig scheduleConfig, JobKey jobKey, TriggerKey triggerKey, Class clazz, String operator);
+
+    void deleteByProjectId(String projectId);
 }

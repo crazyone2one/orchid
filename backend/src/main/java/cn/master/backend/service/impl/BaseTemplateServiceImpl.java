@@ -1,6 +1,7 @@
 package cn.master.backend.service.impl;
 
 import cn.master.backend.constants.TemplateScene;
+import cn.master.backend.constants.TemplateScopeType;
 import cn.master.backend.entity.CustomField;
 import cn.master.backend.entity.CustomFieldOption;
 import cn.master.backend.entity.Template;
@@ -155,7 +156,7 @@ public class BaseTemplateServiceImpl extends ServiceImpl<TemplateMapper, Templat
     public List<Template> getTemplates(String scopeId, String scene) {
         QueryChain<Template> queryChain = queryChain().where(TEMPLATE.SCOPE_ID.eq(scopeId)
                 .and(TEMPLATE.SCENE.eq(scene)));
-        return mapper.selectListWithRelationsByQuery(queryChain);
+        return mapper.selectListByQuery(queryChain);
     }
 
     @Override
@@ -249,6 +250,81 @@ public class BaseTemplateServiceImpl extends ServiceImpl<TemplateMapper, Templat
     @Override
     public String translateInternalTemplate() {
         return Translator.get("template.default");
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public void initFunctionalDefaultTemplate(String scopeId, TemplateScopeType scopeType) {
+        // 初始化字段
+        List<CustomField> customFields = baseCustomFieldService.initFunctionalDefaultCustomField(scopeType, scopeId);
+        // 初始化模板
+        Template template = initDefaultTemplate(scopeId, "functional_default", scopeType, TemplateScene.FUNCTIONAL);
+        // 初始化模板和字段的关联关系
+        List<TemplateCustomFieldRequest> templateCustomFieldRequests = customFields.stream().map(customField -> {
+            TemplateCustomFieldRequest templateCustomFieldRequest = new TemplateCustomFieldRequest();
+            templateCustomFieldRequest.setRequired(true);
+            templateCustomFieldRequest.setFieldId(customField.getId());
+            return templateCustomFieldRequest;
+        }).toList();
+        baseTemplateCustomFieldService.addCustomFieldByTemplateId(template.getId(), templateCustomFieldRequests);
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public void initUiDefaultTemplate(String scopeId, TemplateScopeType scopeType) {
+        initDefaultTemplate(scopeId, "ui_default", scopeType, TemplateScene.UI);
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public void initTestPlanDefaultTemplate(String scopeId, TemplateScopeType scopeType) {
+        initDefaultTemplate(scopeId, "test_plan_default", scopeType, TemplateScene.TEST_PLAN);
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public void deleteByScopeId(String scopeId) {
+        QueryChain<Template> queryChain = queryChain().where(TEMPLATE.SCOPE_ID.eq(scopeId));
+        List<String> ids = queryChain.list().stream().map(Template::getId).toList();
+        // 删除模板
+        LogicDeleteManager.execWithoutLogicDelete(() ->
+                mapper.deleteByQuery(queryChain));
+        // 删除模板和字段的关联关系
+        baseTemplateCustomFieldService.deleteByTemplateIds(ids);
+    }
+
+    @Override
+    public void initApiDefaultTemplate(String scopeId, TemplateScopeType scopeType) {
+        initDefaultTemplate(scopeId, "api_default", scopeType, TemplateScene.API);
+    }
+
+    @Override
+    public void initBugDefaultTemplate(String scopeId, TemplateScopeType scopeType) {
+        // 初始化字段
+        List<CustomField> customFields = baseCustomFieldService.initBugDefaultCustomField(scopeType, scopeId);
+        // 初始化模板
+        Template template = this.initDefaultTemplate(scopeId, "bug_default", scopeType, TemplateScene.BUG);
+        // 初始化模板和字段的关联关系
+        List<TemplateCustomFieldRequest> templateCustomFieldRequests = customFields.stream().map(customField -> {
+            TemplateCustomFieldRequest templateCustomFieldRequest = new TemplateCustomFieldRequest();
+            templateCustomFieldRequest.setRequired(true);
+            templateCustomFieldRequest.setFieldId(customField.getId());
+            return templateCustomFieldRequest;
+        }).toList();
+        baseTemplateCustomFieldService.addCustomFieldByTemplateId(template.getId(), templateCustomFieldRequests);
+    }
+
+    private Template initDefaultTemplate(String scopeId, String name, TemplateScopeType scopeType, TemplateScene scene) {
+        Template template = new Template();
+        template.setName(name);
+        template.setInternal(true);
+        template.setCreateUser("admin");
+        template.setScopeType(scopeType.name());
+        template.setScopeId(scopeId);
+        template.setEnableThirdPart(false);
+        template.setScene(scene.name());
+        mapper.insert(template);
+        return template;
     }
 
     private Template checkResourceExist(String id) {

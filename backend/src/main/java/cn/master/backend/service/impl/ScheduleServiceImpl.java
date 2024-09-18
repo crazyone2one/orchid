@@ -118,6 +118,14 @@ public class ScheduleServiceImpl extends ServiceImpl<ScheduleMapper, Schedule> i
         return schedule.getId();
     }
 
+    @Override
+    public void deleteByProjectId(String projectId) {
+        QueryChain<Schedule> scheduleQueryChain = queryChain().where(Schedule::getProjectId).eq(projectId);
+        List<Schedule> schedules = scheduleQueryChain.list();
+        schedules.forEach(item -> removeJob(item.getKey(), item.getJob()));
+        LogicDeleteManager.execWithoutLogicDelete(() -> mapper.deleteByQuery(scheduleQueryChain));
+    }
+
     private void removeJob(String key, String job) {
         scheduleManager.removeJob(new JobKey(key, job), new TriggerKey(key, job));
     }

@@ -1,8 +1,6 @@
 package cn.master.backend.service.impl;
 
-import cn.master.backend.constants.CustomFieldType;
-import cn.master.backend.constants.TemplateRequiredCustomField;
-import cn.master.backend.constants.TemplateScene;
+import cn.master.backend.constants.*;
 import cn.master.backend.entity.CustomField;
 import cn.master.backend.entity.CustomFieldOption;
 import cn.master.backend.entity.TemplateCustomField;
@@ -208,6 +206,57 @@ public class BaseCustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, C
         LogicDeleteManager.execWithoutLogicDelete(() -> mapper.deleteById(id));
         baseCustomFieldOptionService.deleteByFieldId(id);
         deleteTemplateCustomField(id);
+    }
+
+    @Override
+    public List<CustomField> initBugDefaultCustomField(TemplateScopeType scopeType, String scopeId) {
+        List<CustomField> customFields = new ArrayList<>();
+        for (DefaultBugCustomField defaultBugCustomField : DefaultBugCustomField.values()) {
+            CustomField customField = new CustomField();
+            customField.setName(defaultBugCustomField.getName());
+            customField.setScene(TemplateScene.BUG.name());
+            customField.setType(defaultBugCustomField.getType().name());
+            customField.setScopeType(scopeType.name());
+            customField.setScopeId(scopeId);
+            customField.setEnableOptionKey(false);
+            customFields.add(this.initDefaultCustomField(customField));
+            // 初始化选项
+            baseCustomFieldOptionService.addByFieldId(customField.getId(), defaultBugCustomField.getOptions());
+        }
+        return customFields;
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public void deleteByScopeId(String scopeId) {
+        List<String> ids = queryChain().where(CUSTOM_FIELD.SCOPE_ID.eq(scopeId)).list().stream().map(CustomField::getId).toList();
+        LogicDeleteManager.execWithoutLogicDelete(() -> mapper.deleteByQuery(queryChain().where(CUSTOM_FIELD.SCOPE_ID.eq(scopeId))));
+        baseCustomFieldOptionService.deleteByFieldIds(ids);
+    }
+
+    @Override
+    public List<CustomField> initFunctionalDefaultCustomField(TemplateScopeType scopeType, String scopeId) {
+        List<CustomField> customFields = new ArrayList<>();
+        for (DefaultFunctionalCustomField defaultFunctionalCustomField : DefaultFunctionalCustomField.values()) {
+            CustomField customField = new CustomField();
+            customField.setName(defaultFunctionalCustomField.getName());
+            customField.setScene(TemplateScene.FUNCTIONAL.name());
+            customField.setType(defaultFunctionalCustomField.getType().name());
+            customField.setScopeType(scopeType.name());
+            customField.setScopeId(scopeId);
+            customField.setEnableOptionKey(false);
+            customFields.add(initDefaultCustomField(customField));
+            // 初始化选项
+            baseCustomFieldOptionService.addByFieldId(customField.getId(), defaultFunctionalCustomField.getOptions());
+        }
+        return customFields;
+    }
+
+    private CustomField initDefaultCustomField(CustomField customField) {
+        customField.setInternal(true);
+        customField.setCreateUser("admin");
+        mapper.insert(customField);
+        return customField;
     }
 
     private void deleteTemplateCustomField(String id) {

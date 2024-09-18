@@ -26,4 +26,8 @@ public interface ProjectTemplateService extends BaseTemplateService {
     void setDefaultTemplate(String projectId, String id);
 
     Map<String, Boolean> getProjectTemplateEnableConfig(String projectId);
+
+    TemplateDTO getTemplateDTOById(String templateId, String projectId, String scene);
+
+    TemplateDTO getDefaultTemplateDTO(String projectId, String scene);
 }

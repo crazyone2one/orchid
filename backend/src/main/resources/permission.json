@@ -423,6 +423,9 @@
           },
           {
             "id": "PROJECT_TEST_PLAN_REPORT:READ+DELETE"
+          },
+          {
+            "id": "PROJECT_TEST_PLAN_REPORT:READ+EXPORT"
           }
         ]
       }
@@ -885,6 +888,9 @@
           {
             "id": "PROJECT_API_REPORT:READ+SHARE",
             "name": "permission.api_doc.share"
+          },
+          {
+            "id": "PROJECT_API_REPORT:READ+EXPORT"
           }
         ]
       }

@@ -9,7 +9,7 @@ import {
     GetFieldDetailUrl,
     GetFieldProjectDetailUrl,
     getOrdTemplateStateUrl,
-    getProjectTemplateStateUrl,
+    getProjectTemplateStateUrl, GetProjectTemplateUrl,
     UpdateFieldUrl,
     UpdateProjectFieldUrl
 } from "/@/api/req-urls/setting/template.ts";
@@ -63,4 +63,9 @@ export const addOrUpdateProjectField = (params: AddOrUpdateField) => {
  * @param organizationId
  * @param scene
  */
-export const enableOrOffTemplate = (organizationId: string, scene: SceneType) => alovaInstance.Get(`${EnableOrOffTemplateUrl}/${organizationId}/${scene}`)
+export const enableOrOffTemplate = (organizationId: string, scene: SceneType) => alovaInstance.Get(`${EnableOrOffTemplateUrl}/${organizationId}/${scene}`);
+/**
+ * 获取模板列表(项目)
+ * @param params
+ */
+export const getProjectTemplateList = (params: TableQueryParams) => alovaInstance.Get(`${GetProjectTemplateUrl}/${params.projectId}/${params.scene}`)

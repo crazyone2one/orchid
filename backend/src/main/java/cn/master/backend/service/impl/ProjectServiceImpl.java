@@ -3,6 +3,7 @@ package cn.master.backend.service.impl;
 import cn.master.backend.constants.*;
 import cn.master.backend.entity.*;
 import cn.master.backend.handler.exception.MSException;
+import cn.master.backend.handler.invoker.ProjectServiceInvoker;
 import cn.master.backend.mapper.ProjectMapper;
 import cn.master.backend.mapper.ProjectTestResourcePoolMapper;
 import cn.master.backend.mapper.UserMapper;
@@ -69,6 +70,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     private final OperationLogService operationLogService;
     private final UserMapper userMapper;
     private final BaseUserRolePermissionService baseUserRolePermissionService;
+    private final ProjectServiceInvoker serviceInvoker;
+
     public static final Integer DEFAULT_REMAIN_DAY_COUNT = 30;
     public static final String API_TEST = "apiTest";
     public static final String TEST_PLAN = "testPlan";
@@ -104,6 +107,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         ProjectAddMemberBatchRequest memberRequest = new ProjectAddMemberBatchRequest();
         memberRequest.setProjectIds(List.of(project.getId()));
         memberRequest.setUserIds(request.getUserIds());
+        serviceInvoker.invokeCreateServices(project.getId());
         addProjectAdmin(memberRequest, createUser, path, OperationLogType.ADD.name(), Translator.get("add"), module);
         return projectDTO;
     }
@@ -402,7 +406,16 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public int revoke(String id, String currentUserId) {
-        // todo
+        LogicDeleteManager.execWithoutLogicDelete(() -> {
+            checkProjectNotExist(id);
+            Project project = new Project();
+            project.setId(id);
+            project.setDeleted(false);
+            project.setDeleteTime(null);
+            project.setDeleteUser(null);
+            project.setUpdateUser(currentUserId);
+            mapper.update(project);
+        });
         return 0;
     }
 

@@ -68,3 +68,13 @@ export const addUserToOrgOrProject = (param: AddUserToOrgOrProjectParams) =>
  */
 export const getUserByOrganizationOrProject = (sourceId: string, keyword: string) =>
     alovaInstance.Get<Array<UserListItem>>(`${orgUrl.getUserByOrgOrProjectUrl}${sourceId}`, {params: {keyword}});
+/**
+ * 删除项目
+ * @param id
+ */
+export const deleteProject = (id: string) => alovaInstance.Get(`${orgUrl.getDeleteProjectUrl}${id}`)
+/**
+ * 撤销删除项目
+ * @param id
+ */
+export const revokeDeleteProject = (id: string) => alovaInstance.Get(`${orgUrl.getRevokeProjectUrl}${id}`)

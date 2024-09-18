@@ -1,16 +1,21 @@
 package cn.master.backend.service.impl;
 
+import cn.master.backend.constants.CustomFieldType;
 import cn.master.backend.constants.ProjectApplicationType;
 import cn.master.backend.constants.TemplateScene;
 import cn.master.backend.constants.TemplateScopeType;
+import cn.master.backend.entity.CustomFieldOption;
 import cn.master.backend.entity.ProjectApplication;
 import cn.master.backend.entity.Template;
 import cn.master.backend.handler.exception.MSException;
+import cn.master.backend.mapper.TemplateMapper;
 import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.dto.system.template.ProjectTemplateDTO;
 import cn.master.backend.payload.dto.system.template.TemplateDTO;
+import cn.master.backend.payload.dto.user.UserExtendDTO;
 import cn.master.backend.payload.request.system.template.TemplateUpdateRequest;
 import cn.master.backend.service.*;
+import com.mybatisflex.core.query.QueryChain;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -20,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.handler.result.CommonResultCode.DEFAULT_TEMPLATE_PERMISSION;
@@ -32,13 +38,17 @@ import static cn.master.backend.handler.result.ProjectResultCode.PROJECT_TEMPLAT
 public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implements ProjectTemplateService {
     private final ProjectService projectService;
     private final ProjectApplicationService projectApplicationService;
+    private final TemplateMapper templateMapper;
 
     public ProjectTemplateServiceImpl(BaseTemplateCustomFieldService baseTemplateCustomFieldService,
                                       BaseCustomFieldService baseCustomFieldService,
-                                      BaseCustomFieldOptionService baseCustomFieldOptionService, ProjectService projectService, ProjectApplicationService projectApplicationService) {
+                                      BaseCustomFieldOptionService baseCustomFieldOptionService,
+                                      ProjectService projectService,
+                                      ProjectApplicationService projectApplicationService, TemplateMapper templateMapper) {
         super(baseTemplateCustomFieldService, baseCustomFieldService, baseCustomFieldOptionService);
         this.projectService = projectService;
         this.projectApplicationService = projectApplicationService;
+        this.templateMapper = templateMapper;
     }
 
     @Override
@@ -119,6 +129,58 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
                 .forEach(scene ->
                         templateEnableConfig.put(scene.name(), !isOrganizationTemplateEnable(project.getOrganizationId(), scene.name())));
         return templateEnableConfig;
+    }
+
+    @Override
+    public TemplateDTO getTemplateDTOById(String templateId, String projectId, String scene) {
+        AtomicReference<TemplateDTO> templateDTO = new AtomicReference<>(new TemplateDTO());
+        Template template = templateMapper.selectOneById(templateId);
+        Optional.ofNullable(template).ifPresentOrElse(item -> {
+            templateDTO.set(super.getTemplateDTO(template));
+        }, () -> {
+            templateDTO.set(getDefaultTemplateDTO(projectId, scene));
+        });
+        return templateDTO.get();
+    }
+
+    @Override
+    public TemplateDTO getDefaultTemplateDTO(String projectId, String scene) {
+        String defaultTemplateId = getDefaultTemplateId(projectId, scene);
+        Template template;
+        if (StringUtils.isBlank(defaultTemplateId)) {
+            // 如果没有默认模板，则获取内置模板
+            template = getInternalTemplate(projectId, scene);
+        } else {
+            template = templateMapper.selectOneById(defaultTemplateId);
+            if (template == null) {
+                // 如果默认模板查不到，则获取内置模板
+                template = getInternalTemplate(projectId, scene);
+            }
+        }
+        TemplateDTO templateDTO = getTemplateDTO(template);
+        List<UserExtendDTO> memberOption = projectService.getMemberOption(projectId, null);
+        List<CustomFieldOption> memberCustomOption = memberOption.stream().map(option -> {
+            CustomFieldOption customFieldOption = new CustomFieldOption();
+            customFieldOption.setFieldId(option.getId());
+            customFieldOption.setValue(option.getId());
+            customFieldOption.setInternal(false);
+            customFieldOption.setText(option.getName());
+            return customFieldOption;
+        }).toList();
+        templateDTO.getCustomFields().forEach(item -> {
+            if (StringUtils.equalsAnyIgnoreCase(item.getType(), CustomFieldType.MEMBER.name(), CustomFieldType.MULTIPLE_MEMBER.name())) {
+                item.setOptions(memberCustomOption);
+            }
+        });
+        return templateDTO;
+    }
+
+    private Template getInternalTemplate(String projectId, String scene) {
+        return QueryChain.of(Template.class)
+                .where(Template::getScopeId).eq(projectId)
+                .and(Template::getScene).eq(scene)
+                .and(Template::getInternal).eq(true)
+                .one();
     }
 
     private void checkDefault(Template template) {

@@ -14,11 +14,14 @@ import {
     NDialogProvider,
     NDivider,
     NDropdown,
+    NDynamicTags,
     NFlex,
     NForm,
     NFormItem,
+    NFormItemGi,
     NFormItemRow,
     NGlobalStyle,
+    NGrid,
     NH1,
     NH2,
     NIcon,
@@ -53,7 +56,8 @@ import {
     NTabs,
     NTag,
     NText,
-    NTooltip
+    NTooltip,
+    NTreeSelect, NGridItem
 } from "naive-ui";
 
 export default create({
@@ -97,6 +101,6 @@ export default create({
         NNotificationProvider,
         NModalProvider,
         NFlex, NSplit, NSelect, NSpin, NRadioGroup, NRadio, NRadioButton, NDataTable, NFormItem, NDivider, NCheckbox, NModal, NTag, NCheckboxGroup,
-        NSwitch, NScrollbar
+        NSwitch, NScrollbar, NTreeSelect, NDynamicTags, NGrid, NFormItemGi, NGridItem
     ],
 });

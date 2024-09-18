@@ -62,4 +62,6 @@ public interface TestPlanService extends BaseTestPlanService {
     TestPlanOperationResponse sort(PosRequest request, LogInsertModule logInsertModule);
 
     Page<TestPlanExecuteHisDTO> listHis(TestPlanExecuteHisPageRequest request);
+
+    void deleteByProjectId(String projectId);
 }

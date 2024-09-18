@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  * @author Created by 11's papa on 08/16/2024
  **/
 public abstract class ModuleTreeService {
+    protected static final long LIMIT_POS = NodeSortUtils.DEFAULT_NODE_INTERVAL_POS;
     private static final String MOVE_POS_OPERATOR_LESS = "lessThan";
     private static final String MOVE_POS_OPERATOR_MORE = "moreThan";
     private static final String MOVE_POS_OPERATOR_LATEST = "latest";

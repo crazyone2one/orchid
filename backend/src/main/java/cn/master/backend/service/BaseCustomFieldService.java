@@ -1,5 +1,6 @@
 package cn.master.backend.service;
 
+import cn.master.backend.constants.TemplateScopeType;
 import cn.master.backend.entity.CustomFieldOption;
 import cn.master.backend.payload.dto.system.CustomFieldDTO;
 import cn.master.backend.payload.request.system.CustomFieldOptionRequest;
@@ -42,4 +43,10 @@ public interface BaseCustomFieldService extends IService<CustomField> {
     CustomField update(CustomField customField, List<CustomFieldOptionRequest> options);
 
     void delete(String id);
+
+    List<CustomField> initFunctionalDefaultCustomField(TemplateScopeType scopeType, String scopeId);
+
+    List<CustomField> initBugDefaultCustomField(TemplateScopeType scopeType, String scopeId);
+
+    void deleteByScopeId(String scopeId);
 }

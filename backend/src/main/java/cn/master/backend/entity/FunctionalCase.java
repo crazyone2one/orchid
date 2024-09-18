@@ -6,12 +6,14 @@ import com.mybatisflex.annotation.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.mybatisflex.core.handler.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.io.Serial;
+import java.util.List;
 
 /**
  * 功能用例 实体类。
@@ -77,7 +79,8 @@ public class FunctionalCase implements Serializable {
      * 标签（JSON)
      */
     @Schema(description = "标签（JSON)")
-    private String tags;
+    @Column(typeHandler = JacksonTypeHandler.class)
+    private List<String> tags;
 
     /**
      * 编辑模式：步骤模式/文本模式

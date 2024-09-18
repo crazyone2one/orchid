@@ -6,6 +6,7 @@ import cn.master.backend.entity.Organization;
 import cn.master.backend.entity.User;
 import cn.master.backend.entity.UserRoleRelation;
 import cn.master.backend.handler.exception.MSException;
+import cn.master.backend.handler.invoker.ProjectServiceInvoker;
 import cn.master.backend.mapper.ProjectTestResourcePoolMapper;
 import cn.master.backend.mapper.UserMapper;
 import cn.master.backend.mapper.UserRoleRelationMapper;
@@ -47,8 +48,9 @@ public class OrganizationProjectServiceImpl extends ProjectServiceImpl implement
                                           UserRoleRelationMapper userRoleRelationMapper,
                                           OperationLogService operationLogService,
                                           UserMapper userMapper,
-                                          BaseUserRolePermissionService baseUserRolePermissionService) {
-        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService);
+                                          BaseUserRolePermissionService baseUserRolePermissionService,
+                                          ProjectServiceInvoker serviceInvoker) {
+        super(projectTestResourcePoolMapper, userRoleRelationMapper, operationLogService, userMapper, baseUserRolePermissionService, serviceInvoker);
     }
 
 

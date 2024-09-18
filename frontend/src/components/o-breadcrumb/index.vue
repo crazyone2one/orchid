@@ -55,7 +55,7 @@ function jumpTo(crumb: BreadcrumbItem, index: number) {
 </script>
 
 <template>
-  <n-breadcrumb v-if="appStore.breadcrumbList.length > 0" class="z-10">
+  <n-breadcrumb v-if="appStore.breadcrumbList.length > 0" class="z-10 bg-lime-50 bg-left">
     <n-breadcrumb-item v-for="(crumb, index) of appStore.breadcrumbList"
                        :key="crumb.name" @click="jumpTo(crumb, index)">
       {{ isEdit ? $t(crumb.editLocale || crumb.locale) : $t(crumb.locale) }}

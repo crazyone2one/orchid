@@ -2,15 +2,17 @@
 import {ref} from "vue";
 import ButtonIcon from '/@/components/o-button-icon/index.vue'
 import {FilterFormItem, FilterResult} from "/@/components/o-advance-filter/type.ts";
+import {ViewTypeEnum} from "/@/enums/advanced-filter-enum.ts";
 
 const props = defineProps<{
-  rowCount: number;
+  // rowCount: number;
   filterConfigList: FilterFormItem[]; // 系统字段
   // customFieldsConfigList?: FilterFormItem[]; // 自定义字段
   searchPlaceholder?: string;
   name?: string;
   count?: number;
   notShowInputSearch?: boolean;
+  viewType?: ViewTypeEnum;
 }>();
 const emit = defineEmits<{
   (e: 'keywordSearch', value: string | undefined, combine: FilterResult): void; // keyword 搜索 TODO:可以去除，父组件通过 v-model:keyword 获取关键字

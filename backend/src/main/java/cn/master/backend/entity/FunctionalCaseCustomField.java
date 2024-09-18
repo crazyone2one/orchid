@@ -31,6 +31,7 @@ public class FunctionalCaseCustomField implements Serializable {
     /**
      * id
      */
+    @Id
     @Schema(description = "id")
     private String id;
 

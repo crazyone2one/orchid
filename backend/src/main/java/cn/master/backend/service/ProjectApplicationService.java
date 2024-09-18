@@ -22,4 +22,6 @@ public interface ProjectApplicationService extends IService<ProjectApplication> 
     ProjectApplication getByType(String projectId, String name);
 
     void createOrUpdateConfig(ProjectApplication projectApplication);
+
+    void update(ProjectApplication projectApplication, String userId);
 }

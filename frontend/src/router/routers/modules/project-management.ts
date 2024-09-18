@@ -123,6 +123,27 @@ const ProjectManagement: AppRouteRecordRaw = {
                 ],
             },
         },
+        {
+            path: 'projectManagementTemplateList',
+            name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT,
+            component: () => import('/@/views/project-management/template/components/TemplateManagement.vue'),
+            meta: {
+                locale: 'menu.settings.organization.templateManagement',
+                roles: ['PROJECT_TEMPLATE:READ'],
+                breadcrumbs: [
+                    {
+                        name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE,
+                        locale: 'menu.projectManagement.templateManager',
+                    },
+                    {
+                        name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT,
+                        locale: 'menu.settings.organization.templateManagementList',
+                        editLocale: 'menu.settings.organization.templateManagementList',
+                        query: ['type'],
+                    },
+                ],
+            },
+        }
     ]
 };
 export default ProjectManagement;

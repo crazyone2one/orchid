@@ -14,4 +14,6 @@ public interface BugCommonService {
     List<SelectOption> getLocalHandlerOption(String projectId);
 
     Map<String, String> getAllStatusMap(String projectId);
+
+    void clearAssociateResource(String projectId, List<String> bugIds);
 }

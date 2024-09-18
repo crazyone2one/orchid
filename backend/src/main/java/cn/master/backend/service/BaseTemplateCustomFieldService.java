@@ -4,6 +4,7 @@ import cn.master.backend.payload.request.system.template.TemplateCustomFieldRequ
 import com.mybatisflex.core.service.IService;
 import cn.master.backend.entity.TemplateCustomField;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,4 +25,6 @@ public interface BaseTemplateCustomFieldService extends IService<TemplateCustomF
     void deleteByTemplateIds(List<String> projectTemplateIds);
 
     void deleteByTemplateId(String templateId);
+
+    List<TemplateCustomField> getByTemplateIds(List<String> projectTemplateIds);
 }

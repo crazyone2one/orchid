@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import {computed, h, onMounted, ref, resolveDirective, withDirectives} from "vue";
-import {DataTableColumns, NSwitch} from "naive-ui";
+import {type DataTableColumns, NAlert, NSwitch} from "naive-ui";
 import {useI18n} from "vue-i18n";
 import {usePagination} from "alova/client";
-import {enableOrDisableProject, postProjectTable} from "/@/api/modules/setting/system-org-project.ts";
+import {
+  deleteProject,
+  enableOrDisableProject,
+  postProjectTable,
+  revokeDeleteProject
+} from "/@/api/modules/setting/system-org-project.ts";
 import {TableQueryParams} from "/@/models/common.ts";
 import {hasAnyPermission} from "/@/utils/permission.ts";
 import {CreateOrUpdateSystemProjectParams, OrgProjectTableItem} from "/@/models/orgAndProject.ts";
@@ -13,6 +18,7 @@ import AddProjectModal from "/@/views/setting/system/organizationAndProject/comp
 import {UserItem} from "/@/models/setting/log.ts";
 import Pagination from '/@/components/o-pagination/index.vue'
 import AddUserModal from "/@/views/setting/system/organizationAndProject/components/AddUserModal.vue";
+import {characterLimit} from "/@/utils";
 
 const {t} = useI18n()
 const permission = resolveDirective('permission')
@@ -91,7 +97,11 @@ const columns: DataTableColumns<OrgProjectTableItem> = [
     width: operationWidth.value,
     render(row) {
       if (!row.enable) {
-        return h(OButton, {text: true, content: t('common.revokeDelete')}, {});
+        return withDirectives(h(OButton, {
+              text: true, content: t('common.delete'),
+              onClick: () => handleDelete(row)
+            }, {}),
+            [[permission, ['SYSTEM_ORGANIZATION_PROJECT:READ+DELETE']]]);
       } else {
         const result = []
         result.push(
@@ -119,6 +129,54 @@ const columns: DataTableColumns<OrgProjectTableItem> = [
     }
   },
 ]
+const handleDelete = (record: OrgProjectTableItem) => {
+  window.$dialog.error({
+    title: t('system.project.deleteName', {name: characterLimit(record.name)}),
+    content: t('system.project.deleteTip'),
+    positiveText: t('common.confirmDelete'),
+    negativeText: t('common.cancel'),
+    onPositiveClick: async () => {
+      await deleteProject(record.id);
+      window.$message.success(() => t('common.deleteSuccess'), {
+        render: () => h(NAlert,
+            {
+              class: 'ml-[8px] cursor-pointer text-[rgb(64,128,255)]',
+              title: t('common.deleteSuccess'),
+              type: 'success',
+              style: {
+                boxShadow: 'var(--n-box-shadow)',
+                maxWidth: 'calc(100vw - 32px)',
+                width: '480px'
+              }
+            },
+
+            {
+              default: () => withDirectives(h('span',
+                  {
+                    class: 'ml-[8px] cursor-pointer text-[rgb(64,128,255)]',
+                    onClick: () => handleRevokeDelete(record)
+                  },
+                  {default: () => t('common.revoke'),}
+              ), [[permission, ['SYSTEM_ORGANIZATION_PROJECT:READ+RECOVER']]]),
+            }
+        )
+      })
+      await fetchData()
+    }
+  })
+}
+const handleRevokeDelete = (record: OrgProjectTableItem) => {
+  window.$dialog.error({
+    title: t('system.project.revokeDeleteTitle', {name: characterLimit(record.name)}),
+    positiveText: t('common.revokeDelete'),
+    negativeText: t('common.cancel'),
+    onPositiveClick: async () => {
+      await revokeDeleteProject(record.id);
+      window.$message.success(t('common.revokeDeleteSuccess'));
+      await fetchData();
+    }
+  })
+}
 const handleEnableOrDisableOrg = (record: OrgProjectTableItem, value: boolean) => {
   window.$dialog.info({
     title: value ? t('system.project.enableTitle') : t('system.project.endTitle'),

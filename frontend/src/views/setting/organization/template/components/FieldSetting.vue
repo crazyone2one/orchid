@@ -14,7 +14,6 @@ import EditTemplateDrawer from '/@/views/setting/organization/template/component
 import dayjs from "dayjs";
 import PopConfirm from '/@/components/o-popconfirm/index.vue'
 import {characterLimit} from "/@/utils";
-import {UserListItem} from "/@/models/setting/user.ts";
 
 const props = defineProps<{
   mode: "organization" | "project";

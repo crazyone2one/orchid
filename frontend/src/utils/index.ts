@@ -1,4 +1,4 @@
-import {cloneDeep} from "lodash-es";
+import {cloneDeep, sortBy} from "lodash-es";
 
 export interface TreeNode<T> {
     children?: TreeNode<T>[];
@@ -217,3 +217,21 @@ export const getGenerateId = () => {
 
     return timestamp.toString() + sequence.toString().padStart(5, '0');
 };
+export function isArraysEqualWithOrder<T>(arr1: T[], arr2: T[]): boolean {
+    if (arr1.length !== arr2.length) {
+        return false;
+    }
+    const sortArr1 = sortBy(arr1, 'dataIndex');
+    const sortArr2 = sortBy(arr2, 'dataIndex');
+    for (let i = 0; i < sortArr1.length; i++) {
+        const obj1 = sortArr1[i];
+        const obj2 = sortArr2[i];
+
+        // 逐一比较对象
+        if (JSON.stringify(obj1) !== JSON.stringify(obj2)) {
+            return false;
+        }
+    }
+
+    return true;
+}
