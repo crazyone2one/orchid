@@ -140,6 +140,8 @@ watch(() => data.value, (value) => {
         :render-label="renderLabel"
         label-field="name"
         key-field="id"
+        class="ms-tree"
+        :default-expand-all="props.defaultExpandAll"
         @update:checked-keys="updateCheckedKeys"
         :node-props="nodeProps"
     />
@@ -147,4 +149,10 @@ watch(() => data.value, (value) => {
 </template>
 
 <style scoped>
+.ms-tree-container{
+  @apply h-full;
+  .ms-tree{
+    @apply h-full ;
+  }
+}
 </style>

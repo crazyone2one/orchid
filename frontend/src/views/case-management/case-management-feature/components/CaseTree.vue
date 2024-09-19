@@ -46,6 +46,7 @@ const {send: fetchCaseTree, loading} = useRequest(() => getCaseModuleTree(curren
   force: true
 })
 const initModules = (isSetDefaultKey = false) => {
+  // console.log('initModules',props.modulesCount)
   fetchCaseTree().then(res => {
     caseTree.value = mapTree(res, (e) => {
       return {
@@ -55,6 +56,7 @@ const initModules = (isSetDefaultKey = false) => {
         count: props.modulesCount?.[e.id] || 0,
       };
     })
+
     featureCaseStore.setModulesTree(caseTree.value);
     if (!featureCaseStore.moduleId) {
       featureCaseStore.setModuleId(['all']);
@@ -133,6 +135,7 @@ const renderSuffix = ({option}: { option: TreeOption }) => {
     }
   }),
     h(MoreAction, {
+
       list: caseMoreActions
     }, {})
   ]
@@ -180,7 +183,7 @@ defineExpose({
         :max-length="255"
     />
     <o-tree :data="caseTree" :keyword="moduleKeyword" :selected-keys="props.selectedKeys"
-            :expand-all="props.isExpandAll"
+            :default-expand-all="props.isExpandAll"
             :render-suffix="renderSuffix"
             @select="caseNodeSelect"/>
   </n-spin>

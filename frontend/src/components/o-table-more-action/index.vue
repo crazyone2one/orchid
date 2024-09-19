@@ -19,8 +19,8 @@ const handleSelect = (value: string) => {
     <n-dropdown :trigger="props.trigger || 'click'" :options="props.list" @select="handleSelect">
       <n-button text>
         <template #icon>
-          <n-icon :size="22" class="mt-1 ml-1">
-            <div class="i-carbon-caret-down"/>
+          <n-icon :size="25" class="mt-1 ml-1" >
+            <div class="i-carbon-caret-down mb-4 text-violet-400"/>
           </n-icon>
         </template>
       </n-button>

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Created by 11's papa on 09/10/2024
@@ -100,5 +101,12 @@ public class FunctionalCaseController {
     @HasAuthorize(PermissionConstants.FUNCTIONAL_CASE_READ)
     public Page<FunctionalCasePageDTO> getFunctionalCasePage(@Validated @RequestBody FunctionalCasePageRequest request) {
         return functionalCaseService.getFunctionalCasePage(request, false, true);
+    }
+
+    @PostMapping("/module/count")
+    @Operation(summary = "用例管理-功能用例-统计模块数量")
+    @HasAuthorize(PermissionConstants.FUNCTIONAL_CASE_READ)
+    public Map<String, Long> moduleCount(@Validated @RequestBody FunctionalCasePageRequest request) {
+        return functionalCaseService.moduleCount(request, false);
     }
 }

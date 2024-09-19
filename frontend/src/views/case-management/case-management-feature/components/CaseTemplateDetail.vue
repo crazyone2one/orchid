@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, ref, watch} from "vue";
+import {computed, onBeforeMount, onBeforeUnmount, ref, watch} from "vue";
 import {useAppStore} from "/@/store";
 import {useRoute} from "vue-router";
 import {useI18n} from "vue-i18n";
 import useFeatureCaseStore from "/@/store/modules/case/feature-case.ts";
 import {CreateOrUpdateCase, DetailCase, StepList} from "/@/models/case-management/feature-case.ts";
-import {type FormInst} from 'naive-ui'
+import {type FormInst, SelectOption} from 'naive-ui'
 import {useRequest} from "alova/client";
 import {getCaseDefaultFields, getCaseModuleTree} from "/@/api/modules/case-management/feature-case.ts";
 import {ModuleTreeNode} from "/@/models/common.ts";
@@ -15,7 +15,8 @@ import {getGenerateId} from "/@/utils";
 import {FileItem} from "/@/components/o-upload/types.ts";
 import {PreviewEditorImageUrl} from "/@/api/req-urls/case-management/feature-case.ts";
 import AddStep from "/@/views/case-management/components/AddStep.vue";
-import {CustomField} from "/@/models/setting/template.ts";
+import {CustomField, FieldOptions} from "/@/models/setting/template.ts";
+import {FormItem, FormRuleItem} from "/@/views/case-management/case-management-feature/components/types.ts";
 
 const props = defineProps<{
   formModeValue: Record<string, any>; // 表单值
@@ -35,38 +36,40 @@ const params = ref<Record<string, any>>({
 });
 const fileList = ref<FileItem[]>([]);
 const caseId = ref(props.caseId);
+const formRules = ref<FormItem[]>([]);
 const {send: fetchCaseDefaultFields} = useRequest(() => getCaseDefaultFields(currentProjectId.value), {
   immediate: false,
   force: true
 })
 const initDefaultFields = async () => {
+  formRules.value = [];
   fetchCaseDefaultFields().then(res => {
-    const {id, systemFields} = res;
+    const {id, systemFields, customFields} = res;
     form.value.templateId = id;
-    // const result = customFields.map((item: any) => {
-    //   const memberType = ['MEMBER', 'MULTIPLE_MEMBER'];
-    //   let initValue = item.defaultValue;
-    //   const optionsValue: FieldOptions[] = item.options;
-    //   if (memberType.includes(item.type)) {
-    //     initValue = getDefaultMemberValue(item, optionsValue);
-    //   }
-    //
-    //   return {
-    //     type: item.type,
-    //     name: item.fieldId,
-    //     label: item.fieldName,
-    //     value: initValue,
-    //     required: item.required,
-    //     options: optionsValue || [],
-    //     props: {
-    //       modelValue: initValue,
-    //       options: optionsValue || [],
-    //     },
-    //   };
-    // });
+    formRules.value = customFields.map((item: any) => {
+      // const memberType = ['MEMBER', 'MULTIPLE_MEMBER'];
+      let initValue = item.defaultValue;
+      const optionsValue: FieldOptions[] = item.options;
+      // if (memberType.includes(item.type)) {
+      //   initValue = getDefaultMemberValue(item, optionsValue);
+      // }
+
+      return {
+        type: item.type,
+        name: item.fieldId,
+        label: item.fieldName,
+        value: initValue,
+        required: item.required,
+        options: optionsValue || [],
+        props: {
+          modelValue: initValue,
+          options: optionsValue || [],
+        },
+      };
+    });
     setSystemDefault(systemFields || []);
   })
-}
+};
 const setSystemDefault = (systemFields: CustomField[]) => {
   systemFields.forEach((item: CustomField) => {
     form.value[item.fieldId] = item.defaultValue;
@@ -110,10 +113,10 @@ const initForm: DetailCase = {
 const form = ref<DetailCase | CreateOrUpdateCase>({...initForm});
 const caseFormRef = ref<FormInst | null>(null);
 const formRef = ref<FormInst | null>(null);
-const rules = {
+const rules = ref({
   name: [{required: true, message: t('system.orgTemplate.caseNamePlaceholder')}],
   moduleId: [{required: true, message: t('system.orgTemplate.moduleRuleTip')}],
-}
+})
 
 // 前置操作附件id
 const prerequisiteFileIds = ref<string[]>([]);
@@ -124,7 +127,10 @@ const expectedResultFileIds = ref<string[]>([]);
 // 描述附件id
 const descriptionFileIds = ref<string[]>([]);
 const caseTree = ref<ModuleTreeNode[]>([]);
-const {send: fetchCaseTree} = useRequest(() => getCaseModuleTree(currentProjectId.value), {immediate: false})
+const {send: fetchCaseTree} = useRequest(() => getCaseModuleTree(currentProjectId.value), {
+  immediate: false,
+  force: true
+})
 const handleUploadImage = (file: File) => {
   console.log('file', file)
 }
@@ -145,20 +151,26 @@ const allAttachmentsFileIds = computed(() => {
     ...descriptionFileIds.value,
   ];
 });
+const formItem = ref<FormRuleItem[]>([]);
 const resetForm = async () => {
   caseFormRef.value?.restoreValidation();
   form.value = {...initForm, templateId: form.value.templateId};
   await initDefaultFields();
-  // form.value.customFields = formItem.value.map((item: any) => {
-  //   return {
-  //     fieldId: item.field,
-  //     value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
-  //   };
-  // });
+  form.value.customFields = formItem.value.map((item: any) => {
+    return {
+      fieldId: item.field,
+      value: Array.isArray(item.value) ? JSON.stringify(item.value) : item.value,
+    };
+  });
   fileList.value = [];
   form.value.tags = [];
 }
-
+const handleUpdateValue = (value: string, option: SelectOption) => {
+  form.value.customFields = [{
+    fieldId: option.fieldId,
+    value: Array.isArray(value) ? JSON.stringify(value) : value,
+  }]
+}
 // 监视父组件传递过来的参数处理
 watch(
     () => props.formModeValue,
@@ -189,6 +201,11 @@ watch(() => form.value, (newValue) => {
     emit('update:formModeValue', params.value);
   }
 }, {deep: true})
+watch(() => formRules.value, (val) => {
+  val.forEach(item => {
+    formItem.value.push({title: item.label, options: item.options, type: item.type})
+  })
+}, {deep: true})
 onBeforeMount(() => {
   caseId.value = '';
   caseId.value = props.caseId;
@@ -213,7 +230,9 @@ const validForm = () => {
     })
   })
 }
-
+onBeforeUnmount(() => {
+  formRules.value = [];
+});
 defineExpose({
   resetForm,
   validForm
@@ -278,6 +297,13 @@ defineExpose({
               key-field="id"
           />
         </n-form-item>
+        <div v-for="item in formItem" :key="item.id">
+          <n-form-item :label="item.title" path="tags">
+            <n-select v-if="item.type==='SELECT'" :options="item.options" label-field="text"
+                      :placeholder="t('common.pleaseSelect')"
+                      @update:value="handleUpdateValue"/>
+          </n-form-item>
+        </div>
         <n-form-item :label="t('system.orgTemplate.tags')" path="tags">
           <n-dynamic-tags v-model:value="form.tags"/>
         </n-form-item>

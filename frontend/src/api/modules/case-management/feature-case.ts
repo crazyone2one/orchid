@@ -9,10 +9,12 @@ import {
     GetCaseModulesCountUrl,
     GetCaseModuleTreeUrl,
     GetDefaultTemplateFieldsUrl,
-    GetRecycleCaseModulesCountUrl
+    GetRecycleCaseModulesCountUrl,
+    UpdateCaseUrl
 } from "/@/api/req-urls/case-management/feature-case.ts";
-import {CaseManagementTable, CreateOrUpdateModule} from "/@/models/case-management/feature-case.ts";
+import {CaseManagementTable, CreateOrUpdateModule, CustomAttributes} from "/@/models/case-management/feature-case.ts";
 import {ContentTypeEnum} from "/@/enums/http-enum.ts";
+import {getCaseLevels} from "/@/views/case-management/case-management-feature/components/utils.ts";
 
 /**
  * 获取全部用例模块数量
@@ -40,7 +42,7 @@ export const getCaseDefaultFields = (projectId: string) => {
  * @param id
  */
 export const getCaseDetail = (id: string) => {
-    return alovaInstance.Get<Record<string, any>>(`${DetailCaseUrl}/${id}`)
+    return alovaInstance.Get<CaseManagementTable>(`${DetailCaseUrl}/${id}`)
 };
 /**
  * 获取模块树
@@ -58,9 +60,21 @@ export const createCaseModuleTree = (params: CreateOrUpdateModule) => {
 };
 
 export const getCaseList = (params: TableQueryParams) => {
-    return alovaInstance.Post<CommonPage<CaseManagementTable>>(GetCaseListUrl, params);
+    return alovaInstance.Post<CommonPage<CaseManagementTable>>(GetCaseListUrl, params, {
+        transform(data: any, _headers) {
+            return data.records.map((item: CaseManagementTable) => ({
+                ...item,
+                caseLevel: getCaseLevels(item.customFields as unknown as CustomAttributes[]),
+                showModuleTree: false,
+                visible: false,
+            }));
+        }
+    });
 };
-
+/**
+ * 创建用例
+ * @param params
+ */
 export const createCaseRequest = (params: Record<string, any>) => {
     const formData = new FormData();
     params.fileList.forEach((item: any) => {
@@ -71,4 +85,19 @@ export const createCaseRequest = (params: Record<string, any>) => {
         formData.append('request', new Blob([requestData], {type: ContentTypeEnum.JSON}));
     }
     return uploadInstance.Post<CreateOrUpdateModule>(CreateCaseUrl, formData);
+};
+/**
+ * 编辑用例
+ * @param params
+ */
+export const updateCaseRequest = (params: Record<string, any>) => {
+    const formData = new FormData();
+    params.fileList.forEach((item: any) => {
+        formData.append("files", item.file, item.file.name);
+    });
+    if (params.request) {
+        const requestData = JSON.stringify(params.request);
+        formData.append('request', new Blob([requestData], {type: ContentTypeEnum.JSON}));
+    }
+    return uploadInstance.Post<CreateOrUpdateModule>(UpdateCaseUrl, formData);
 };

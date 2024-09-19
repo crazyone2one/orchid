@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ref} from "vue";
 import ButtonIcon from '/@/components/o-button-icon/index.vue'
-import {FilterFormItem, FilterResult} from "/@/components/o-advance-filter/type.ts";
+import {FilterFormItem, FilterResult, ViewItem} from "/@/components/o-advance-filter/type.ts";
 import {ViewTypeEnum} from "/@/enums/advanced-filter-enum.ts";
 
 const props = defineProps<{
@@ -23,8 +23,11 @@ const emit = defineEmits<{
 const keyword = defineModel<string>('keyword', {default: ''});
 const visible = ref(false);
 const filterCount = ref(0);
+const currentView = ref(''); // 当前视图
+const internalViews = ref<ViewItem[]>([]);
 const defaultFilterResult: FilterResult = {accordBelow: 'AND', combine: {}};
 const filterResult = ref<FilterResult>({...defaultFilterResult});
+const isAdvancedSearchMode = ref(false);
 const handleResetFilter = () => {
   filterResult.value = {...defaultFilterResult};
   emit('advSearch', {...defaultFilterResult});
@@ -50,6 +53,17 @@ const handleClear = () => {
 const handleOpenFilter = () => {
   visible.value = !visible.value;
 };
+const clearFilter = () => {
+  if (currentView.value === internalViews.value[0].id) {
+    // filterDrawerRef.value?.handleReset();
+    handleFilter({ searchMode: 'AND', conditions: [] });
+  } else {
+    currentView.value = internalViews.value[0].id;
+  }
+}
+defineExpose({
+  isAdvancedSearchMode,
+});
 </script>
 
 <template>
@@ -79,8 +93,9 @@ const handleOpenFilter = () => {
                clearable
                @clear="handleClear"
                @keyup="emit('keywordSearch', keyword, filterResult)"/>
+      <n-button v-show="isAdvancedSearchMode" text @click="clearFilter"> {{ $t('advanceFilter.clearFilter') }}</n-button>
       <slot name="right"></slot>
-      <button-icon icon-class="i-ic-baseline-autorenew"/>
+      <button-icon icon-class="i-ic-baseline-autorenew" @click="handleRefresh"/>
     </div>
   </div>
 </template>

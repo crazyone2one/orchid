@@ -11,6 +11,9 @@ import {useI18n} from "vue-i18n";
 import {useRequest} from "alova/client";
 import {createCaseModuleTree} from "/@/api/modules/case-management/feature-case.ts";
 import CaseTable from "/@/views/case-management/case-management-feature/components/CaseTable.vue";
+import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
+import {useRouter} from "vue-router";
+import {TableQueryParams} from "/@/models/common.ts";
 
 const featureCaseStore = useFeatureCaseStore();
 const modulesCount = computed(() => {
@@ -19,7 +22,7 @@ const modulesCount = computed(() => {
 const appStore = useAppStore()
 const {t} = useI18n();
 const currentProjectId = computed(() => appStore.currentProjectId);
-
+const router = useRouter();
 const isExpandAll = ref(false);
 const groupKeyword = ref<string>('');
 const caseTreeRef = ref<InstanceType<typeof CaseTree> | null>(null);
@@ -35,7 +38,7 @@ const activeFolder = ref<string>(featureCaseStore.moduleId[0] || 'all');
 const offspringIds = ref<string[]>([]);
 const activeFolderName = ref('');
 const handleCaseNodeSelect = (keys: string[], _offspringIds: string[], moduleName: string) => {
-  [activeFolder.value] = keys;
+  activeFolder.value = keys[0];
   activeCaseType.value = 'module';
   offspringIds.value = [..._offspringIds];
   featureCaseStore.setModuleId(keys);
@@ -56,6 +59,26 @@ const handleConfirm = (formValue: ConfirmValue) => {
     caseTreeRef.value?.initModules();
     addSubVisible.value = false;
   })
+}
+const setActiveFolder = (type: string) => {
+  activeFolder.value = type;
+  if (['public', 'all', 'recycle'].includes(type)) {
+    activeCaseType.value = 'folder';
+  }
+  if (type === 'recycle') {
+    router.push({
+      name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE_RECYCLE,
+    });
+  }
+}
+const initModulesCount = (params: TableQueryParams, refreshModule = false) => {
+  if (refreshModule) {
+    caseTreeRef.value?.initModules();
+  }
+  featureCaseStore.getCaseModulesCount(params);
+}
+const initModules = () => {
+  caseTreeRef.value?.initModules();
 }
 </script>
 
@@ -100,7 +123,11 @@ const handleConfirm = (formValue: ConfirmValue) => {
             </div>
           </div>
           <div class="h-[calc(100vh-220px)]">
-            <case-tree ref="caseTreeRef" :is-expand-all="isExpandAll" v-model:group-keyword="groupKeyword"
+            <case-tree ref="caseTreeRef" v-model:group-keyword="groupKeyword"
+                       :is-expand-all="isExpandAll"
+                       :all-names="rootModulesName"
+                       :active-folder="activeFolder"
+                       :modules-count="modulesCount"
                        @init="setRootModules"
                        @case-node-select="handleCaseNodeSelect"
             />
@@ -109,10 +136,13 @@ const handleConfirm = (formValue: ConfirmValue) => {
       </template>
       <template #2>
         <div class="h-full p-[16px_16px]">
-          <case-table ref="caseTableRef" :active-folder="activeFolder"
+          <case-table ref="caseTableRef"
+                      :active-folder="activeFolder"
                       :offspring-ids="offspringIds"
                       :modules-count="modulesCount"
                       :module-name="activeFolderName"
+                      @init="initModulesCount"
+                      @init-modules="initModules"
                       @set-active-folder="setActiveFolder('all')"/>
         </div>
       </template>

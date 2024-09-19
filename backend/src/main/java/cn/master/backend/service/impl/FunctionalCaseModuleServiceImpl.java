@@ -9,6 +9,7 @@ import cn.master.backend.entity.FunctionalCaseModule;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.mapper.FunctionalCaseModuleMapper;
 import cn.master.backend.payload.dto.BaseTreeNode;
+import cn.master.backend.payload.dto.project.ModuleCountDTO;
 import cn.master.backend.payload.dto.project.NodeSortDTO;
 import cn.master.backend.payload.dto.system.LogDTO;
 import cn.master.backend.payload.request.functional.FunctionalCaseModuleCreateRequest;
@@ -32,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static cn.master.backend.entity.table.FunctionalCaseModuleTableDef.FUNCTIONAL_CASE_MODULE;
 import static cn.master.backend.entity.table.FunctionalCaseTableDef.FUNCTIONAL_CASE;
@@ -240,5 +242,19 @@ public class FunctionalCaseModuleServiceImpl extends ModuleTreeService {
             finalModuleIds = new ArrayList<>(parentModuleIds);
         }
         return totalList.stream().distinct().toList();
+    }
+
+    public Map<String, Long> getModuleCountMap(String projectId, List<ModuleCountDTO> moduleCountDTOList) {
+        //构建模块树，并计算每个节点下的所有数量（包含子节点）
+        List<BaseTreeNode> treeNodeList = getTreeOnlyIdsAndResourceCount(projectId, moduleCountDTOList);
+        //通过广度遍历的方式构建返回值
+        return super.getIdCountMapByBreadth(treeNodeList);
+    }
+
+    private List<BaseTreeNode> getTreeOnlyIdsAndResourceCount(String projectId, List<ModuleCountDTO> moduleCountDTOList) {
+        //节点内容只有Id和parentId
+        List<BaseTreeNode> fileModuleList = QueryChain.of(functionalCaseModuleMapper).select(FUNCTIONAL_CASE_MODULE.ID, FUNCTIONAL_CASE_MODULE.PARENT_ID)
+                .from(FUNCTIONAL_CASE_MODULE).where(FUNCTIONAL_CASE_MODULE.PROJECT_ID.eq(projectId)).listAs(BaseTreeNode.class);
+        return super.buildTreeAndCountResource(fileModuleList, moduleCountDTOList, true, Translator.get("functional_case.module.default.name"));
     }
 }

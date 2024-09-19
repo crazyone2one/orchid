@@ -14,6 +14,7 @@ import cn.master.backend.entity.FunctionalCase;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 功能用例 服务层。
@@ -44,4 +45,6 @@ public interface FunctionalCaseService extends IService<FunctionalCase> {
     Page<FunctionalCasePageDTO> getFunctionalCasePage(FunctionalCasePageRequest request, Boolean deleted, Boolean isRepeat);
 
     List<String> getIds(BaseFunctionalCaseBatchDTO request, String projectId, boolean deleted);
+
+    Map<String, Long> moduleCount(FunctionalCasePageRequest request, boolean delete);
 }

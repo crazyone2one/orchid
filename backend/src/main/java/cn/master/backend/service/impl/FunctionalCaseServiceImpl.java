@@ -13,6 +13,7 @@ import cn.master.backend.mapper.FunctionalCaseFollowerMapper;
 import cn.master.backend.mapper.FunctionalCaseMapper;
 import cn.master.backend.payload.dto.BaseFunctionalCaseBatchDTO;
 import cn.master.backend.payload.dto.functional.*;
+import cn.master.backend.payload.dto.project.ModuleCountDTO;
 import cn.master.backend.payload.dto.system.LogDTO;
 import cn.master.backend.payload.dto.system.OptionDTO;
 import cn.master.backend.payload.dto.system.template.TemplateCustomFieldDTO;
@@ -34,6 +35,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.ApiScenarioTableDef.API_SCENARIO;
@@ -61,6 +64,7 @@ import static cn.master.backend.entity.table.OperationHistoryTableDef.OPERATION_
 import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
 import static cn.master.backend.entity.table.ProjectVersionTableDef.PROJECT_VERSION;
 import static cn.master.backend.entity.table.TestPlanCaseExecuteHistoryTableDef.TEST_PLAN_CASE_EXECUTE_HISTORY;
+import static cn.master.backend.entity.table.TestPlanConfigTableDef.TEST_PLAN_CONFIG;
 import static cn.master.backend.entity.table.TestPlanFunctionalCaseTableDef.TEST_PLAN_FUNCTIONAL_CASE;
 
 /**
@@ -347,7 +351,28 @@ public class FunctionalCaseServiceImpl extends ServiceImpl<FunctionalCaseMapper,
 
     @Override
     public Page<FunctionalCasePageDTO> getFunctionalCasePage(FunctionalCasePageRequest request, Boolean deleted, Boolean isRepeat) {
-        Page<FunctionalCasePageDTO> page = queryChain().pageAs(Page.of(request.getCurrent(), request.getPageSize()), FunctionalCasePageDTO.class);
+        Page<FunctionalCasePageDTO> page = queryChain()
+                .select(FUNCTIONAL_CASE.ALL_COLUMNS, PROJECT_VERSION.NAME.as("versionName")).from(FUNCTIONAL_CASE)
+                .leftJoin(PROJECT_VERSION).on(FUNCTIONAL_CASE.VERSION_ID.eq(PROJECT_VERSION.ID))
+                .where(FUNCTIONAL_CASE.PROJECT_ID.eq(request.getProjectId()))
+                .and(FUNCTIONAL_CASE.MODULE_ID.in(request.getModuleIds()))
+                .and(FUNCTIONAL_CASE.NAME.like(request.getKeyword())
+                        .or(FUNCTIONAL_CASE.NUM.like(request.getKeyword()))
+                        .or(FUNCTIONAL_CASE.TAGS.like(request.getKeyword())))
+                .and(FUNCTIONAL_CASE.ID.notIn(
+                        QueryChain.of(CaseReviewFunctionalCase.class).select(CASE_REVIEW_FUNCTIONAL_CASE.CASE_ID)
+                                .from(CASE_REVIEW_FUNCTIONAL_CASE).where(CASE_REVIEW_FUNCTIONAL_CASE.REVIEW_ID.eq(request.getReviewId()))
+                                .listAs(String.class)
+                ).when(Objects.nonNull(request.getReviewId())))
+                .and(FUNCTIONAL_CASE.ID.notIn(
+                                QueryChain.of(TestPlanFunctionalCase.class).select(TEST_PLAN_FUNCTIONAL_CASE.FUNCTIONAL_CASE_ID)
+                                        .from(TEST_PLAN_FUNCTIONAL_CASE).where(TEST_PLAN_FUNCTIONAL_CASE.TEST_PLAN_ID.eq(request.getTestPlanId()))
+                                        .listAs(String.class)
+                        ).when(!isRepeat)
+                )
+                .and(FUNCTIONAL_CASE.ID.notIn(request.getExcludeIds()))
+                .orderBy(FUNCTIONAL_CASE.POS.desc())
+                .pageAs(Page.of(request.getCurrent(), request.getPageSize()), FunctionalCasePageDTO.class);
         return handleCustomFields(page, request.getProjectId());
     }
 
@@ -360,6 +385,54 @@ public class FunctionalCaseServiceImpl extends ServiceImpl<FunctionalCaseMapper,
                         .or(FUNCTIONAL_CASE.NUM.like(request.getCondition().getKeyword()))
                         .or(FUNCTIONAL_CASE.TAGS.like(request.getCondition().getKeyword())))
                 .listAs(String.class);
+    }
+
+    @Override
+    public Map<String, Long> moduleCount(FunctionalCasePageRequest request, boolean delete) {
+        if (StringUtils.isNotEmpty(request.getTestPlanId())) {
+            checkTestPlanRepeatCase(request);
+        }
+        //查出每个模块节点下的资源数量。 不需要按照模块进行筛选
+        request.setModuleIds(null);
+        List<ModuleCountDTO> moduleCountDTOList = countModuleIdByRequest(request, delete);
+        Map<String, Long> moduleCountMap = functionalCaseModuleService.getModuleCountMap(request.getProjectId(), moduleCountDTOList);
+        //查出全部用例数量
+        AtomicLong allCount = new AtomicLong(0);
+        moduleCountDTOList.forEach(item -> allCount.addAndGet(item.getDataCount()));
+        moduleCountMap.put(CASE_MODULE_COUNT_ALL, allCount.get());
+        return moduleCountMap;
+    }
+
+    private List<ModuleCountDTO> countModuleIdByRequest(FunctionalCasePageRequest request, boolean delete) {
+        return queryChain()
+                .select(FUNCTIONAL_CASE.MODULE_ID, QueryMethods.count(FUNCTIONAL_CASE.ID).as("dataCount")).from(FUNCTIONAL_CASE)
+                .where(FUNCTIONAL_CASE.PROJECT_ID.eq(request.getProjectId()))
+                .and(FUNCTIONAL_CASE.MODULE_ID.in(request.getModuleIds()))
+                .and(FUNCTIONAL_CASE.NAME.like(request.getKeyword())
+                        .or(FUNCTIONAL_CASE.NUM.like(request.getKeyword()))
+                        .or(FUNCTIONAL_CASE.TAGS.like(request.getKeyword())))
+                .and(FUNCTIONAL_CASE.ID.notIn(
+                        QueryChain.of(CaseReviewFunctionalCase.class).select(CASE_REVIEW_FUNCTIONAL_CASE.CASE_ID)
+                                .from(CASE_REVIEW_FUNCTIONAL_CASE).where(CASE_REVIEW_FUNCTIONAL_CASE.REVIEW_ID.eq(request.getReviewId()))
+                                .listAs(String.class)
+                ).when(Objects.nonNull(request.getReviewId())))
+                .and(FUNCTIONAL_CASE.ID.notIn(
+                                QueryChain.of(TestPlanFunctionalCase.class).select(TEST_PLAN_FUNCTIONAL_CASE.FUNCTIONAL_CASE_ID)
+                                        .from(TEST_PLAN_FUNCTIONAL_CASE).where(TEST_PLAN_FUNCTIONAL_CASE.TEST_PLAN_ID.eq(request.getTestPlanId()))
+                                        .listAs(String.class)
+                        ).when(Objects.nonNull(request.getTestPlanId()))
+                )
+                .and(FUNCTIONAL_CASE.ID.notIn(request.getExcludeIds()))
+                .groupBy(FUNCTIONAL_CASE.MODULE_ID)
+                .listAs(ModuleCountDTO.class);
+    }
+
+    private void checkTestPlanRepeatCase(FunctionalCasePageRequest request) {
+        TestPlanConfig testPlanConfig = QueryChain.of(TestPlanConfig.class).where(TEST_PLAN_CONFIG.TEST_PLAN_ID.eq(request.getTestPlanId())).one();
+        if (testPlanConfig != null && BooleanUtils.isTrue(testPlanConfig.getRepeatCase())) {
+            //测试计划允许重复用例，意思就是统计不受测试计划影响。去掉这个条件，
+            request.setTestPlanId(null);
+        }
     }
 
     private Page<FunctionalCasePageDTO> handleCustomFields(Page<FunctionalCasePageDTO> page, String projectId) {
