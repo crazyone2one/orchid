@@ -67,6 +67,12 @@ export const getCaseList = (params: TableQueryParams) => {
                 caseLevel: getCaseLevels(item.customFields as unknown as CustomAttributes[]),
                 showModuleTree: false,
                 visible: false,
+                tags: (item.tags || []).map((item: string, i: number) => {
+                    return {
+                        id: `${item}-${i}`,
+                        name: item,
+                    };
+                }),
             }));
         }
     });

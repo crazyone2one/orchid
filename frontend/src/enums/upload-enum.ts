@@ -25,5 +25,6 @@ export enum UploadStatus {
     finished = 'finished',
     error = 'error',
     uploading = 'uploading',
-    removed = 'removed'
+    removed = 'removed',
+    init = 'init',
 }

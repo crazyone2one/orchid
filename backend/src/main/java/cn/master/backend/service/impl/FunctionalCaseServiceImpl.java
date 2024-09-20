@@ -228,6 +228,11 @@ public class FunctionalCaseServiceImpl extends ServiceImpl<FunctionalCaseMapper,
         FunctionalCase functionalCase = checkFunctionalCase(functionalCaseId);
         FunctionalCaseDetailDTO functionalCaseDetailDTO = new FunctionalCaseDetailDTO();
         BeanUtils.copyProperties(functionalCase, functionalCaseDetailDTO);
+        functionalCaseDetailDTO.setSteps(new String(functionalCase.getSteps() == null ? new byte[0] : functionalCase.getSteps(), StandardCharsets.UTF_8));
+        functionalCaseDetailDTO.setTextDescription(new String(functionalCase.getTextDescription() == null ? new byte[0] : functionalCase.getTextDescription(), StandardCharsets.UTF_8));
+        functionalCaseDetailDTO.setExpectedResult(new String(functionalCase.getExpectedResult() == null ? new byte[0] : functionalCase.getExpectedResult(), StandardCharsets.UTF_8));
+        functionalCaseDetailDTO.setPrerequisite(new String(functionalCase.getPrerequisite() == null ? new byte[0] : functionalCase.getPrerequisite(), StandardCharsets.UTF_8));
+        functionalCaseDetailDTO.setDescription(new String(functionalCase.getDescription() == null ? new byte[0] : functionalCase.getDescription(), StandardCharsets.UTF_8));
         //模板校验 获取自定义字段
         checkTemplateCustomField(functionalCaseDetailDTO, functionalCase);
         //是否关注用例
@@ -464,6 +469,11 @@ public class FunctionalCaseServiceImpl extends ServiceImpl<FunctionalCaseMapper,
 
     private void updateCase(FunctionalCaseEditRequest request, String userId, FunctionalCase functionalCase) {
         functionalCase.setUpdateUser(userId);
+        functionalCase.setSteps(StringUtils.defaultIfBlank(request.getSteps(), StringUtils.EMPTY).getBytes(StandardCharsets.UTF_8));
+        functionalCase.setTextDescription(StringUtils.defaultIfBlank(request.getTextDescription(), StringUtils.EMPTY).getBytes(StandardCharsets.UTF_8));
+        functionalCase.setExpectedResult(StringUtils.defaultIfBlank(request.getExpectedResult(), StringUtils.EMPTY).getBytes(StandardCharsets.UTF_8));
+        functionalCase.setPrerequisite(StringUtils.defaultIfBlank(request.getPrerequisite(), StringUtils.EMPTY).getBytes(StandardCharsets.UTF_8));
+        functionalCase.setDescription(StringUtils.defaultIfBlank(request.getDescription(), StringUtils.EMPTY).getBytes(StandardCharsets.UTF_8));
         functionalCaseMapper.update(functionalCase);
         //更新自定义字段
         List<CaseCustomFieldDTO> customFields = request.getCustomFields();

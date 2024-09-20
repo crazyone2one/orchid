@@ -3,7 +3,7 @@ import {CaseManagementTable, CaseModuleQueryParams, CustomAttributes} from "/@/m
 import {CacheTabTypeEnum} from "/@/enums/cache-tab-enum.ts";
 import OCacheWrapper from "/@/components/o-cache-wrapper/index.vue";
 import AdvanceFilter from '/@/components/o-advance-filter/index.vue'
-import {computed, h, onMounted, ref, resolveDirective, watch, withDirectives} from "vue";
+import {computed, h, onBeforeUnmount, onMounted, ref, resolveDirective, watch, withDirectives} from "vue";
 import {FilterFormItem, FilterResult} from "/@/components/o-advance-filter/type.ts";
 import {ViewTypeEnum} from "/@/enums/advanced-filter-enum.ts";
 import {useI18n} from "vue-i18n";
@@ -27,6 +27,9 @@ import Pagination from "/@/components/o-pagination/index.vue";
 import {statusIconMap} from "/@/views/case-management/case-management-feature/components/utils.ts";
 import ExecuteResult from "/@/components/o-case-associate/ExecuteResult.vue";
 import OButton from "/@/components/o-button/index.vue";
+import TagGroup from '/@/components/o-tag-group/index.vue'
+import CaseDetailDrawer from "/@/views/case-management/case-management-feature/components/CaseDetailDrawer.vue";
+import {PaginationInfo} from "/@/components/o-pagination/types.ts";
 
 const props = defineProps<{
   activeFolder: string;
@@ -165,7 +168,10 @@ const columns: DataTableColumns<CaseManagementTable> = [
   {
     title: t('caseManagement.featureCase.tableColumnTag'),
     key: 'tags',
-    width: 300
+    width: 300,
+    render: (record) => {
+      return h(TagGroup, {tagList: record.tags, type: 'primary'}, {})
+    }
   },
   {
     title: t('caseManagement.featureCase.tableColumnUpdateUser'),
@@ -198,7 +204,8 @@ const columns: DataTableColumns<CaseManagementTable> = [
         withDirectives(h(OButton, {
           text: true,
           content: t('common.edit'),
-          class: '!mr-0'
+          class: '!mr-0',
+          onClick: () => operateCase(record, true)
         }, {}), [[permission, ['FUNCTIONAL_CASE:READ+UPDATE']]]),
         withDirectives(h(NDivider, {
           vertical: true,
@@ -223,7 +230,32 @@ const columns: DataTableColumns<CaseManagementTable> = [
     }
   },
 ]
-
+const isEdit = ref<boolean>(false);
+const showDetailDrawer = ref(false);
+const activeDetailId = ref<string>('');
+const activeCaseIndex = ref<number>(0);
+const operateCase = (record: CaseManagementTable, operateType: boolean) => {
+  isEdit.value = operateType;
+  if (operateType) {
+    const index = data.value.findIndex((item: CaseManagementTable) => item.id === record.id);
+    showCaseDetail(record.id, index);
+  } else {
+    router.push({
+      name: CaseManagementRouteEnum.CASE_MANAGEMENT_CASE_DETAIL,
+      query: {
+        id: record.id,
+      },
+      params: {
+        mode: operateType ? 'edit' : 'copy',
+      },
+    });
+  }
+}
+const showCaseDetail = (id: string, index: number) => {
+  activeDetailId.value = id;
+  activeCaseIndex.value = index;
+  showDetailDrawer.value = true;
+}
 const deleteCase = (record: CaseManagementTable) => {
   console.log(record)
 }
@@ -271,7 +303,13 @@ const reqParam = ref<TableQueryParams>({
   pageSize: 10,
   keyword: ''
 })
-const {send: fetchCaseData, data, page, pageSize, total} = usePagination((page, pageSize) => {
+const pagination = ref<PaginationInfo>({
+  page: 1,
+  pageSize: 10,
+  pageCount: 0,
+  total: 0
+})
+const {send: fetchCaseData, data, page, pageSize, total, onSuccess} = usePagination((page, pageSize) => {
   reqParam.value.current = page
   reqParam.value.pageSize = pageSize
   return getCaseList(reqParam.value)
@@ -283,6 +321,11 @@ const {send: fetchCaseData, data, page, pageSize, total} = usePagination((page, 
   },
   data: response => response.records,
   total: response => response.totalRow
+})
+onSuccess(() => {
+  pagination.value.page = page.value
+  pagination.value.pageSize = pageSize.value
+  pagination.value.total = total.value
 })
 const handleSetPage = (param: number) => page.value = param
 const handleSetPageSize = (param: number) => pageSize.value = param
@@ -348,6 +391,9 @@ onMounted(() => {
   initData()
   emitTableParams()
 })
+onBeforeUnmount(() => {
+  showDetailDrawer.value = false;
+});
 getDefaultFields();
 </script>
 
@@ -393,8 +439,10 @@ getDefaultFields();
         </div>
       </o-cache-wrapper>
     </keep-alive>
-
   </div>
+  <case-detail-drawer v-model:visible="showDetailDrawer" :detail-id="activeDetailId"
+                      :detail-index="activeCaseIndex" :table-data="data" :page-change="handleSetPage"
+                      :is-edit="isEdit" :pagination="pagination" @success="initData()"/>
 </template>
 
 <style scoped>

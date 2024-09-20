@@ -2,7 +2,7 @@ import {ModuleTreeNode} from "/@/models/common.ts";
 import {findNodePathByKey} from "/@/utils";
 import {hasAnyPermission} from "/@/utils/permission.ts";
 import {FormItem} from "/@/views/case-management/case-management-feature/components/types.ts";
-import {CustomAttributes} from "/@/models/case-management/feature-case.ts";
+import {CustomAttributes, TabItemType} from "/@/models/case-management/feature-case.ts";
 import {useI18n} from "/@/hooks/use-i18n.ts";
 import {StatusType} from "/@/enums/case-enum.ts";
 
@@ -119,3 +119,73 @@ export const getCaseLevels = (customFields: CustomAttributes[]): CaseLevel => {
     );
     return caseLevelItem?.options.find((it: any) => it.value === caseLevelItem.defaultValue)?.text as CaseLevel;
 }
+
+export const tabDefaultSettingList: TabItemType[] = [
+    {
+        value: 'basicInfo',
+        label: t('caseManagement.featureCase.basicInfo'),
+        canHide: false,
+        isShow: true,
+    },
+    {
+        value: 'detail',
+        label: t('caseManagement.featureCase.detail'),
+        canHide: false,
+        isShow: true,
+    },
+
+    {
+        value: 'case',
+        label: t('caseManagement.featureCase.case'),
+        canHide: true,
+        isShow: true,
+    },
+ ]
+
+export const caseTab: TabItemType[] = [
+    {
+        value: 'dependency',
+        label: t('caseManagement.featureCase.dependency'),
+        canHide: true,
+        isShow: true,
+    },
+    {
+        value: 'caseReview',
+        label: t('caseManagement.featureCase.caseReview'),
+        canHide: true,
+        isShow: true,
+    },
+    {
+        value: 'testPlan',
+        label: t('caseManagement.featureCase.testPlan'),
+        canHide: true,
+        isShow: true,
+    },
+    {
+        value: 'comments',
+        label: t('caseManagement.featureCase.comments'),
+        canHide: true,
+        isShow: true,
+    },
+    {
+        value: 'changeHistory',
+        label: t('caseManagement.featureCase.changeHistory'),
+        canHide: true,
+        isShow: true,
+    },
+];
+
+export const buggerTab: TabItemType[] = [
+    {
+        value: 'requirement',
+        label: t('caseManagement.featureCase.requirement'),
+        canHide: true,
+        isShow: true,
+    },
+    {
+        value: 'bug',
+        label: t('caseManagement.featureCase.bug'),
+        canHide: true,
+        isShow: true,
+    },
+];

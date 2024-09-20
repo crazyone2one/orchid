@@ -9,6 +9,7 @@ import {setupI18n} from "/@/i18n";
 import naive from '/@/utils/naive.ts'
 import permission from '/@/directive/permission/index.ts'
 import outerClick from "/@/directive/outer-click";
+import VueDOMPurifyHTML from 'vue-dompurify-html';
 
 const bootstrap = async () => {
     const app = createApp(App);
@@ -27,6 +28,17 @@ const bootstrap = async () => {
     // }
     app.directive('permission', permission)
     app.directive('outer', outerClick)
+    app.use(VueDOMPurifyHTML, {
+        hooks: {
+            afterSanitizeAttributes: (currentNode: Element) => {
+                if ('target' in currentNode && 'rel' in currentNode) {
+                    const attribute = currentNode.getAttribute('target');
+                    currentNode.setAttribute('target', attribute == null ? '_blank' : attribute);
+                    currentNode.setAttribute('rel', 'noopener noreferrer nofollow');
+                }
+            },
+        },
+    });
     app.mount("#app");
 }
 

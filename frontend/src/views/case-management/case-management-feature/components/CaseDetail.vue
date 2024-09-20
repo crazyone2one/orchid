@@ -37,6 +37,7 @@ const handleSave = (isContinue = false, isReview = false) => {
     if (isReview) {
       caseDetailInfo.value.request.reviewId = route.query.reviewId;
     }
+    console.log(caseDetailInfo.value)
     createCase(caseDetailInfo.value).then(res => {
       if (isContinue) {
         window.$message.success(t('caseManagement.featureCase.addSuccess'));
