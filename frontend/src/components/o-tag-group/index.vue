@@ -2,9 +2,12 @@
 import {computed, useAttrs} from "vue";
 
 const props = withDefaults(defineProps<{
-  tagList: Array<any>; showNum?: number;
+  tagList: Array<any>;
+  showNum?: number;
   nameKey?: string;
-  size?: 'small' | 'medium' | 'large'
+  size?: 'small' | 'medium' | 'large',
+  isStringTag?: boolean;
+  allowEdit?: boolean;
 }>(), {
   showNum: 2,
   nameKey: 'name',
@@ -21,17 +24,37 @@ const filterTagList = computed(() => {
 const showTagList = computed(() => {
   return filterTagList.value.slice(0, props.showNum);
 });
+const tagsTooltip = computed(() => {
+  return filterTagList.value.map((e: any) => (props.isStringTag ? e : e[props.nameKey])).join('，');
+});
+const numberTagWidth = computed(() => {
+  const numberStr = `${props.tagList.length - props.showNum}`;
+  return numberStr.length + 4;
+});
 </script>
 
 <template>
-  <div v-if="tagList.length > 0" class="flex max-w-[440px] flex-row" @click="emit('click')">
+  <div v-if="tagList.length > 0"
+       :class="`tag-group-class ${props.allowEdit ? 'cursor-pointer' : ''}`"
+       @click="emit('click')">
     <n-tag v-for="tag of showTagList" :key="tag.id" :size="props.size" v-bind="attrs">
-      {{ tag[props.nameKey] }}
+      {{ props.isStringTag ? tag : tag[props.nameKey] }}
     </n-tag>
+    <n-tooltip v-if="props.tagList.length > props.showNum">
+      <template #trigger>
+        <n-tag :size="props.size" :width="numberTagWidth" v-bind="attrs">
+          + {{ props.tagList.length - props.showNum }}
+        </n-tag>
+      </template>
+      {{ tagsTooltip }}
+    </n-tooltip>
   </div>
-  <span v-else> - </span>
+  <span v-else :class="`tag-group-class ${props.allowEdit ? 'min-h-[24px] cursor-pointer' : ''}`"> - </span>
 </template>
 
 <style scoped>
-
+.tag-group-class {
+  max-width: 440px;
+  @apply flex w-full flex-row;
+}
 </style>
