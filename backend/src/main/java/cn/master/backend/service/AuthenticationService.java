@@ -16,6 +16,7 @@ public interface AuthenticationService {
     UserDTO authenticate(AuthenticationRequest request);
 
     AuthenticationResponse refreshToken(RefreshTokenRequest request);
+
     AuthenticationResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
     UserDTO getUserDTO(String id);

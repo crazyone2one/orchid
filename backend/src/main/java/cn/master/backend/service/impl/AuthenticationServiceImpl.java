@@ -9,7 +9,7 @@ import cn.master.backend.payload.dto.user.UserRoleResourceDTO;
 import cn.master.backend.payload.request.AuthenticationRequest;
 import cn.master.backend.payload.request.RefreshTokenRequest;
 import cn.master.backend.payload.response.AuthenticationResponse;
-import cn.master.backend.security.CustomUserDetails;
+import cn.master.backend.security.AuthUserDetail;
 import cn.master.backend.security.JwtGenerator;
 import cn.master.backend.security.UserDetailsServiceImpl;
 import cn.master.backend.service.AuthenticationService;
@@ -41,7 +41,9 @@ import java.util.stream.Collectors;
 
 import static cn.master.backend.entity.table.OrganizationTableDef.ORGANIZATION;
 import static cn.master.backend.entity.table.ProjectTableDef.PROJECT;
+import static cn.master.backend.entity.table.UserKeyTableDef.USER_KEY;
 import static cn.master.backend.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
+import static cn.master.backend.entity.table.UserTableDef.USER;
 import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 /**
@@ -66,7 +68,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         SecurityContextHolder.setContext(context);
         String accessToken = jwtGenerator.generateAccessToken(request.getUsername(), userDetailsService.loadUserByUsername(request.getUsername()).getAuthorities());
         String refreshToken = jwtGenerator.generateRefreshToken(request.getUsername());
-        CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+        AuthUserDetail principal = (AuthUserDetail) authentication.getPrincipal();
         userKeyService.revokeAllUserTokens(principal);
         userKeyService.saveUserToken(accessToken, refreshToken, principal);
         //UserKey userKey = userKeyService.createRefreshToken(request.getUsername(), accessToken);
@@ -257,7 +259,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public UserDTO getUserDTO(String id) {
-        UserDTO response = QueryChain.of(User.class).where(User::getId).eq(id).oneAs(UserDTO.class);
+        UserDTO response = QueryChain.of(User.class)
+                .select(USER.ALL_COLUMNS, USER_KEY.ACCESS_TOKEN, USER_KEY.REFRESH_TOKEN)
+                .from(USER)
+                .join(USER_KEY).on(USER.NAME.eq(USER_KEY.USER_ID))
+                .where(User::getId).eq(id).oneAs(UserDTO.class);
         UserRolePermissionDTO dto = getUserRolePermission(id);
         response.setUserRoleRelations(dto.getUserRoleRelations());
         response.setUserRoles(dto.getUserRoles());

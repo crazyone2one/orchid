@@ -3,10 +3,10 @@ server:
 spring:
   data:
     redis:
-      database: 8
-      host: 172.16.2.10
+      database: 1
+      host: 127.0.0.1
       port: 6379
-      password: c1$4T&9pW#z2Q@7vL
+#      password: c1$4T&9pW#z2Q@7vL
       timeout: 5s
       connect-timeout: 5s
   session:

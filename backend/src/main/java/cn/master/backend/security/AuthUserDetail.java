@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  * @author Created by 11's papa on 08/06/2024
  **/
-public class CustomUserDetails implements UserDetails {
+public class AuthUserDetail implements UserDetails {
     @Getter
     private final String id;
     private final String username;
@@ -24,7 +24,7 @@ public class CustomUserDetails implements UserDetails {
     private final String projectId;
     Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(User user, List<String> roles) {
+    public AuthUserDetail(User user, List<String> roles) {
         this.username = user.getName();
         this.password = user.getPassword();
         this.authorities = roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());

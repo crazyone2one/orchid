@@ -8,7 +8,7 @@ import cn.master.backend.payload.dto.user.UserDTO;
 import cn.master.backend.payload.request.AuthenticationRequest;
 import cn.master.backend.payload.request.RefreshTokenRequest;
 import cn.master.backend.payload.response.AuthenticationResponse;
-import cn.master.backend.security.CustomUserDetails;
+import cn.master.backend.security.AuthUserDetail;
 import cn.master.backend.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,8 +45,8 @@ public class AuthController {
     public ResultHolder getUserInfo(HttpServletResponse response) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (Objects.nonNull(authentication)) {
-            CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
-            UserDTO userDTO = authenticationService.getUserDTO(principal.getId());
+            //CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+            UserDTO userDTO = authenticationService.getUserDTO(((AuthUserDetail) authentication.getPrincipal()).getId());
             authenticationService.autoSwitch(userDTO);
             Project lastProject = projectMapper.selectOneById(userDTO.getLastProjectId());
             if (StringUtils.isBlank(userDTO.getLastProjectId()) || lastProject == null || !lastProject.getEnable()) {

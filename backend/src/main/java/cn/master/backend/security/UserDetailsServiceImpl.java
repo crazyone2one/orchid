@@ -5,12 +5,10 @@ import cn.master.backend.entity.UserRoleRelation;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.query.QueryChain;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import javax.security.auth.login.AccountLockedException;
 import java.util.List;
 
 /**
@@ -19,7 +17,7 @@ import java.util.List;
 @Component
 public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public AuthUserDetail loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = QueryChain.of(User.class).where(User::getName).eq(username)
                 .oneOpt()
                 .orElseThrow(() -> new UsernameNotFoundException(Translator.get("user_not_exist")));
@@ -35,6 +33,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .where(UserRoleRelation::getUserId).eq(user.getId())
                 .list();
         List<String> roleList = userRoleRelations.stream().map(UserRoleRelation::getRoleId).toList();
-        return new CustomUserDetails(user, roleList);
+        return new AuthUserDetail(user, roleList);
     }
 }
