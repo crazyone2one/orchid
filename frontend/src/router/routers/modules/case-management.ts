@@ -69,6 +69,27 @@ const CaseManagement: AppRouteRecordRaw = {
                 isTopMenu: true,
             },
         },
+        {
+            path: 'caseManagementReviewCreate',
+            name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_CREATE,
+            component: () => import('/@/views/case-management/case-review/components/CreateReview.vue'),
+            meta: {
+                locale: 'menu.caseManagement.caseManagementReviewCreate',
+                roles: ['CASE_REVIEW:READ+ADD', 'CASE_REVIEW:READ+UPDATE'],
+                breadcrumbs: [
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW,
+                        locale: 'menu.caseManagement.caseManagementReview',
+                    },
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_CREATE,
+                        locale: 'menu.caseManagement.caseManagementReviewCreate',
+                        editTag: 'id',
+                        editLocale: 'menu.caseManagement.caseManagementCaseReviewEdit',
+                    },
+                ],
+            },
+        },
     ],
 };
 export default CaseManagement;

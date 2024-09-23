@@ -20,6 +20,7 @@ import cn.master.backend.service.CaseReviewModuleService;
 import cn.master.backend.service.CaseReviewService;
 import cn.master.backend.service.DeleteCaseReviewService;
 import cn.master.backend.service.FunctionalCaseService;
+import cn.master.backend.util.DateUtils;
 import cn.master.backend.util.NumGenerator;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
@@ -130,7 +131,7 @@ public class CaseReviewServiceImpl extends ServiceImpl<CaseReviewMapper, CaseRev
         BaseAssociateCaseRequest baseAssociateCaseRequest = request.getBaseAssociateCaseRequest();
         List<String> caseIds = doSelectIds(baseAssociateCaseRequest, baseAssociateCaseRequest.getProjectId());
         CaseReview caseReview = addCaseReview(request, userId, caseReviewId, caseIds);
-        addAssociate(request, userId, caseReviewId, caseIds, baseAssociateCaseRequest.getReviewers());
+        addAssociate(request, userId, caseReview.getId(), caseIds, baseAssociateCaseRequest.getReviewers());
         return caseReview;
     }
 
@@ -390,16 +391,26 @@ public class CaseReviewServiceImpl extends ServiceImpl<CaseReviewMapper, CaseRev
     }
 
     private void checkAndSetStartAndEndTime(CaseReviewRequest request, CaseReview caseReview) {
-        if (Objects.nonNull(request.getStartTime()) && request.getStartTime().isBefore(LocalDateTime.now())) {
+        long currentZeroTime = getCurrentZeroTime();
+        if (request.getStartTime() != null && request.getStartTime() < currentZeroTime) {
             throw new MSException(Translator.get("permission.case_review.start_time"));
         } else {
-            caseReview.setStartTime(request.getStartTime());
+            caseReview.setStartTime(DateUtils.getLocalDateTime(request.getStartTime()));
         }
-        if (Objects.nonNull(request.getEndTime()) && request.getEndTime().isBefore(LocalDateTime.now())) {
+        if (request.getEndTime() != null && request.getEndTime() < currentZeroTime) {
             throw new MSException(Translator.get("permission.case_review.end_time"));
         } else {
-            caseReview.setEndTime(request.getEndTime());
+            caseReview.setEndTime(DateUtils.getLocalDateTime(request.getEndTime()));
         }
+    }
+
+    private long getCurrentZeroTime() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
     }
 
     private Long getNextPos(String projectId) {

@@ -41,10 +41,10 @@ public class CaseReviewRequest implements Serializable {
     private String reviewPassRule;
 
     @Schema(description = "评审开始时间")
-    private LocalDateTime startTime;
+    private Long startTime;
 
     @Schema(description = "评审结束时间")
-    private LocalDateTime endTime;
+    private Long endTime;
 
     @Schema(description = "标签")
     private List<String> tags;

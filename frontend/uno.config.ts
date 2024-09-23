@@ -32,6 +32,9 @@ export default defineConfig({
                 'my-icons': {
                     success: () => fs.readFile('./src/assets/icons/success.svg', 'utf-8'),
                     'case-review': () => fs.readFile('./src/assets/icons/case-review.svg', 'utf-8'),
+                    'folder-collapse': () => fs.readFile('./src/assets/icons/folder-collapse.svg', 'utf-8'),
+                    'folder-expansion': () => fs.readFile('./src/assets/icons/folder-expansion.svg', 'utf-8'),
+                    'question-circle': () => fs.readFile('./src/assets/icons/question-circle.svg', 'utf-8'),
                 },
                 custom: {
 

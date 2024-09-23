@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<{
   useMapData?: boolean;
   defaultExpandAll?: boolean;
   searchDebounce?: number; // 搜索防抖 ms 数
+  isModal?: boolean;
 }>(), {
   useMapData: true,
   defaultExpandAll: false,

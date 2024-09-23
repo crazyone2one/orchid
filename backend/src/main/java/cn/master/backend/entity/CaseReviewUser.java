@@ -36,6 +36,7 @@ public class CaseReviewUser implements Serializable {
      * id
      */
     @Schema(description = "id")
+    @Id
     private String id;
 
     @Schema(description =  "评审ID", requiredMode = Schema.RequiredMode.REQUIRED)

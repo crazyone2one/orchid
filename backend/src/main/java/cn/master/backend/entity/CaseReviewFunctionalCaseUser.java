@@ -1,5 +1,6 @@
 package cn.master.backend.entity;
 
+import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
 import java.io.Serializable;
 
@@ -31,6 +32,7 @@ public class CaseReviewFunctionalCaseUser implements Serializable {
      * id
      */
     @Schema(description = "id")
+    @Id
     private String id;
 
     /**

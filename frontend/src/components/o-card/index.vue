@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<Partial<{
 const emit = defineEmits(['saveAndContinue', 'save', 'toggleFullScreen']);
 const router = useRouter();
 const _specialHeight = props.hasBreadcrumb ? 32 + props.specialHeight : props.specialHeight; // 有面包屑的话，默认面包屑高度24+8间距
-const handleBack=()=>{
+const handleBack = () => {
   if (typeof props.handleBack === 'function') {
     props.handleBack();
   } else {
@@ -51,46 +51,60 @@ const handleBack=()=>{
 </script>
 
 <template>
-  <n-card
-      :segmented="{
+  <n-spin class="z-[100] !block" :show="props.loading">
+    <n-card
+        :segmented="{
       content: true,
       footer: 'soft',
     }"
-  >
-    <template #header>
-      <slot name="headerLeft">
-        <div class="font-medium">{{ props.title }}</div>
-        <div>{{ props.subTitle }}</div>
-      </slot>
-    </template>
-    <template #header-extra>
-      <slot name="headerRight"></slot>
-    </template>
-    <div class="relative h-full w-full" :style="{ minWidth: `${props.minWidth || 1000}px` }">
-      <slot></slot>
-    </div>
-    <template #footer>
-      <div v-if="!props.hideFooter && !props.simple">
-        <div class="ml-0 mr-auto">
-          <slot name="footerLeft"></slot>
-        </div>
-        <slot name="footerRight">
-          <div class="flex justify-end gap-[16px]">
-            <n-button secondary @click="handleBack">{{ $t('mscard.defaultCancelText') }}</n-button>
-            <n-button secondary  @click="emit('saveAndContinue')">{{ props.saveAndContinueText || $t('mscard.defaultSaveAndContinueText') }}</n-button>
-            <n-button type="primary" @click="emit('save')">
-              {{ props.saveText || $t(props.isEdit ? 'mscard.defaultUpdate' : 'mscard.defaultConfirm') }}
-            </n-button>
-          </div>
+    >
+      <template #header>
+        <slot name="headerLeft">
+          <div class="font-medium text-gray-900">{{ props.title }}</div>
+          <div class="text-gray-300">{{ props.subTitle }}</div>
         </slot>
+      </template>
+      <template #header-extra>
+        <slot name="headerRight"></slot>
+      </template>
+      <div class="relative h-full w-full" :style="{ minWidth: `${props.minWidth || 1000}px` }">
+        <slot></slot>
       </div>
-    </template>
-    <!--    <template #action>-->
-    <!--      #action-->
-    <!--    </template>-->
-  </n-card>
+      <template #footer>
+        <div v-if="!props.hideFooter && !props.simple" class="ms-card-footer">
+          <div class="ml-0 mr-auto">
+            <slot name="footerLeft"></slot>
+          </div>
+          <slot name="footerRight">
+            <div class="flex justify-end gap-[16px]">
+              <n-button secondary @click="handleBack">{{ $t('mscard.defaultCancelText') }}</n-button>
+              <n-button secondary @click="emit('saveAndContinue')">
+                {{ props.saveAndContinueText || $t('mscard.defaultSaveAndContinueText') }}
+              </n-button>
+              <n-button type="primary" @click="emit('save')">
+                {{ props.saveText || $t(props.isEdit ? 'mscard.defaultUpdate' : 'mscard.defaultConfirm') }}
+              </n-button>
+            </div>
+          </slot>
+        </div>
+      </template>
+      <!--    <template #action>-->
+      <!--      #action-->
+      <!--    </template>-->
+    </n-card>
+  </n-spin>
+
 </template>
 
 <style scoped>
+.ms-card-footer{
+  @apply fixed flex justify-between bg-white;
+  right: 16px;
+  bottom: 0;
+  z-index: 100;
+  padding: 24px;
+  border-bottom: 0;
 
+  --tw-shadow: 0 -1px 4px rgb(2 2 2 / 10%);
+}
 </style>

@@ -232,6 +232,20 @@ export function isArraysEqualWithOrder<T>(arr1: T[], arr2: T[]): boolean {
             return false;
         }
     }
-
     return true;
+}
+export function addCommasToNumber(number: number) {
+    if (number === 0 || number === undefined) {
+        return '0';
+    }
+    // 将数字转换为字符串
+    const numberStr = number.toString();
+    // 分割整数部分和小数部分
+    const parts = numberStr.split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || ''; // 如果没有小数部分，则设为空字符串
+    // 对整数部分添加逗号分隔
+    const integerWithCommas = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // 拼接整数部分和小数部分（如果有）
+    return decimalPart ? `${integerWithCommas}.${decimalPart}` : integerWithCommas;
 }
