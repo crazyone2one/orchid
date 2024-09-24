@@ -20,7 +20,6 @@ import cn.master.backend.service.CaseReviewModuleService;
 import cn.master.backend.service.CaseReviewService;
 import cn.master.backend.service.DeleteCaseReviewService;
 import cn.master.backend.service.FunctionalCaseService;
-import cn.master.backend.util.DateUtils;
 import cn.master.backend.util.NumGenerator;
 import cn.master.backend.util.Translator;
 import com.mybatisflex.core.logicdelete.LogicDeleteManager;
@@ -37,7 +36,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -395,12 +393,12 @@ public class CaseReviewServiceImpl extends ServiceImpl<CaseReviewMapper, CaseRev
         if (request.getStartTime() != null && request.getStartTime() < currentZeroTime) {
             throw new MSException(Translator.get("permission.case_review.start_time"));
         } else {
-            caseReview.setStartTime(DateUtils.getLocalDateTime(request.getStartTime()));
+            caseReview.setStartTime(request.getStartTime());
         }
         if (request.getEndTime() != null && request.getEndTime() < currentZeroTime) {
             throw new MSException(Translator.get("permission.case_review.end_time"));
         } else {
-            caseReview.setEndTime(DateUtils.getLocalDateTime(request.getEndTime()));
+            caseReview.setEndTime(request.getEndTime());
         }
     }
 

@@ -2,7 +2,7 @@
 import FolderAll from '/src/components/o-folder-all/index.vue'
 import {hasAnyPermission} from "/@/utils/permission.ts";
 import {ModuleTreeNode} from "/@/models/common.ts";
-import {h, onBeforeMount, ref} from "vue";
+import {h, onBeforeMount, ref, watch} from "vue";
 import PopConfirm from '/src/views/case-management/case-review/components/index/PopConfirm.vue'
 import {useAppStore} from "/@/store";
 import {useRequest} from "alova/client";
@@ -46,9 +46,9 @@ const {
   loading,
   send: fetchReviewModules
 } = useRequest(() => getReviewModules(appStore.currentProjectId), {immediate: false, force: true})
-const initModules = (isSetDefaultKey = false) => {
+const initModules = async (isSetDefaultKey = false) => {
+  const nodePathObj = {} as Record<string, any>;
   fetchReviewModules().then(res => {
-    const nodePathObj = {} as Record<string, any>;
     folderTree.value = mapTree<ModuleTreeNode>(res, (e, fullPath) => {
       // 拼接当前节点的完整路径
       nodePathObj[e.id] = {
@@ -70,10 +70,17 @@ const initModules = (isSetDefaultKey = false) => {
         offspringIds.push(e.id);
         return e;
       });
-
       emit('folderNodeSelect', selectedKeys.value, offspringIds);
     }
     emit('init', folderTree.value, nodePathObj);
+    // console.log(1, props.modulesCount)
+    // folderTree.value.forEach((e) => {
+    //   console.log(2, e)
+    //   return {
+    //     ...e,
+    //     count: props.modulesCount?.[e.id] || 0, // 避免模块数量先初始化完成了，数量没更新
+    //   }
+    // })
   })
 }
 const folderNodeSelect = (selectedKeys: string[], node: TreeNodeData) => {
@@ -128,6 +135,18 @@ const renderSuffix = ({option}: { option: TreeOption }) => {
   }
   return result;
 }
+watch(
+    () => props.modulesCount,
+    (obj) => {
+      folderTree.value = mapTree<ModuleTreeNode>(folderTree.value, (node) => {
+        return {
+          ...node,
+          count: obj?.[node.id] || 0,
+        };
+      });
+      allFileCount.value = obj?.all || 0;
+    }
+);
 onBeforeMount(() => {
   initModules();
 });

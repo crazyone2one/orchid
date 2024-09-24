@@ -2,6 +2,7 @@
 
 import {BatchApiParams, TableQueryParams} from '/@/models/common.ts';
 import {StartReviewStatus} from '/@/enums/case-enum.ts';
+import {CaseLevel} from "/@/components/o-case-associate/types.ts";
 
 // 评审状态, PREPARED: 待开始, UNDERWAY: 进行中, COMPLETED: 已完成, ARCHIVED: 已归档(暂时没有)
 export type ReviewStatus = 'PREPARED' | 'UNDERWAY' | 'COMPLETED';
@@ -244,6 +245,7 @@ export interface ReviewCaseItem {
     myStatus: ReviewResult;
     moduleId: string;
     moduleName: string;
+    caseLevel?: CaseLevel;
 }
 
 // 评审详情-提交评审入参

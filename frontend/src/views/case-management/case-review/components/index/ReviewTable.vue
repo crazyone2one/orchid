@@ -16,6 +16,8 @@ import TagGroup from '/@/components/o-tag-group/index.vue'
 import OButton from "/@/components/o-button/index.vue";
 import TableMoreAction from '/@/components/o-table-more-action/index.vue'
 import {hasAllPermission} from "../../../../../utils/permission.ts";
+import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
+import {useRouter} from "vue-router";
 
 const props = defineProps<{
   activeFolder: string;
@@ -37,6 +39,7 @@ const emit = defineEmits<{
   (e: 'init', params: ReviewListQueryParams): void;
 }>();
 const {t} = useI18n()
+const router = useRouter();
 const appStore = useAppStore()
 const userStore = useUserStore()
 const filterConfigList = ref<FilterFormItem[]>([]);
@@ -93,7 +96,7 @@ const columns: DataTableColumns<ReviewItem> = [
     width: 100,
     render: (record) => {
       return h(NButton, {
-        text: true,
+        text: true, type: 'info',
         class: 'px-0 !text-[14px] !leading-[22px]',
         onClick: () => handleOpenDetail(record.id)
       }, {default: () => h('div', {class: 'max-w-[168px]'}, {default: () => record.num})})
@@ -210,10 +213,18 @@ const columns: DataTableColumns<ReviewItem> = [
   },
 ]
 const handleOpenDetail = (id: string) => {
-  window.$message.info(`详情功能暂未实现${id}`,)
+  router.push({
+    name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL,
+    query: {id,},
+  });
 }
 const handleEditReview = (record: ReviewItem) => {
-  window.$message.info(`编辑功能暂未实现${record.id}`,)
+  router.push({
+    name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_CREATE,
+    query: {
+      id: record.id,
+    },
+  });
 }
 const handleMoreActionSelect = (item: DropdownOption, record: ReviewItem) => {
   switch (item.key) {
@@ -254,8 +265,7 @@ const searchReview = () => {
 }
 watch(
     () => innerShowType.value,
-    (value, oldValue) => {
-      console.log('innerShowType', value, oldValue)
+    () => {
       // resetFilterParams();
       searchReview();
     }

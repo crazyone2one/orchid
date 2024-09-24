@@ -1,8 +1,8 @@
 import {alovaInstance} from "/@/api";
 import {
     CopyReviewParams,
-    Review,
-    ReviewDetailReviewersItem,
+    Review, ReviewCaseItem, ReviewDetailCaseListQueryParams,
+    ReviewDetailReviewersItem, ReviewHistoryItem,
     ReviewItem,
     ReviewListQueryParams,
     ReviewModule,
@@ -16,15 +16,21 @@ import {
     AddReviewUrl,
     CopyReviewUrl,
     EditReviewUrl,
+    GetCaseReviewHistoryListUrl,
+    GetReviewDetailCasePageUrl,
+    GetReviewDetailModuleCountUrl,
+    GetReviewDetailModuleTreeUrl,
     GetReviewDetailUrl,
     GetReviewListUrl,
     GetReviewModulesUrl,
     GetReviewUsersUrl,
+    ReviewModuleCountUrl,
     UpdateReviewModuleUrl
 } from "/@/api/req-urls/case-management/case-review.ts";
 import {CommonPage} from "/@/models/common.ts";
-import {CaseManagementTable} from "/@/models/case-management/feature-case.ts";
+import {CaseManagementTable, CustomAttributes} from "/@/models/case-management/feature-case.ts";
 import dayjs from "dayjs";
+import {getCaseLevels} from "/@/views/case-management/case-management-feature/components/utils.ts";
 
 /**
  * 新增评审模块
@@ -43,6 +49,36 @@ export const updateReviewModule = (params: UpdateReviewModuleParams) => alovaIns
 export const getReviewModules = (projectId: string) => alovaInstance.Get<ReviewModuleItem[]>(`${GetReviewModulesUrl}/${projectId}`);
 export const getReviewDetail = (id: string) => alovaInstance.Get<ReviewItem>(`${GetReviewDetailUrl}/${id}`);
 /**
+ * 评审详情-已关联用例模块树
+ * @param id
+ */
+export const getReviewDetailModuleTree = (id: string) => alovaInstance.Get(`${GetReviewDetailModuleTreeUrl}/${id}`);
+/**
+ * 评审详情-获取用例评审历史
+ * @param reviewId
+ * @param caseId
+ */
+export const getCaseReviewHistoryList = (reviewId: string, caseId: string) =>
+    alovaInstance.Get<ReviewHistoryItem[]>(`${GetCaseReviewHistoryListUrl}/${reviewId}/${caseId}`);
+/**
+ * 评审详情-模块下用例数量统计
+ * @param param
+ */
+export const getReviewDetailModuleCount = (param: ReviewDetailCaseListQueryParams) => alovaInstance.Post<Record<string, any>>(GetReviewDetailModuleCountUrl, param);
+/**
+ * 评审详情-获取用例列表
+ * @param param
+ */
+export const getReviewDetailCasePage = (param: ReviewDetailCaseListQueryParams) =>
+    alovaInstance.Post<CommonPage<ReviewCaseItem>>(GetReviewDetailCasePageUrl, param,{
+        transform(data: any, _headers) {
+            return data.records.map((item: CaseManagementTable) => ({
+                ...item,
+                caseLevel: getCaseLevels(item.customFields as unknown as CustomAttributes[]),
+            }));
+        }
+    })
+/**
  * 获取评审人员列表
  * @param projectId
  * @param keyword
@@ -52,6 +88,11 @@ export const getReviewUsers = (projectId: string, keyword: string) =>
 export const addReview = (params: Review) => alovaInstance.Post<ReviewItem>(AddReviewUrl, params);
 export const copyReview = (params: CopyReviewParams) => alovaInstance.Post<ReviewItem>(CopyReviewUrl, params);
 export const editReview = (params: UpdateReviewParams) => alovaInstance.Post<ReviewItem>(EditReviewUrl, params);
+/**
+ * 评审模块树-统计用例数量
+ * @param params
+ */
+export const reviewModuleCount = (params: ReviewListQueryParams) => alovaInstance.Post<Record<string, number>>(ReviewModuleCountUrl, params);
 /**
  * 获取评审列表
  * @param params

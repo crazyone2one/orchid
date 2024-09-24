@@ -12,17 +12,17 @@ const props = withDefaults(defineProps<{
 const statusMap = {
   PREPARED: {
     label: 'caseManagement.caseReview.unStart',
-    color: 'var(--color-text-n8)',
+    color: 'rgb(247,248,250)',
     class: '!text-[rgb(29,33,41)]',
   },
   UNDERWAY: {
     label: 'caseManagement.caseReview.going',
-    color: 'rgb(var(--link-2))',
+    color: 'rgb(190,218,255)',
     class: '!text-[rgb(var(--link-6))]',
   },
   COMPLETED: {
     label: 'caseManagement.caseReview.finished',
-    color: 'rgb(var(--success-2))',
+    color: 'rgb(175,240,181)',
     class: '!text-[rgb(var(--success-6))]',
   },
   ARCHIVED: {
@@ -32,12 +32,12 @@ const statusMap = {
   },
   SUCCESS: {
     label: 'common.success',
-    color: 'rgb(var(--success-2))',
+    color: 'rgb(175,240,181)',
     class: '!text-[rgb(var(--success-6))]',
   },
   ERROR: {
     label: 'common.fail',
-    color: 'rgb(var(--danger-2))',
+    color: 'rgb(253,205,197)',
     class: '!text-[rgb(var(--danger-6))]',
   },
   PENDING: {
@@ -47,7 +47,7 @@ const statusMap = {
   },
   BLOCKED: {
     label: 'common.block',
-    color: 'var(--color-bg-6)',
+    color: '#FFF',
     class: '!text-[rgb(var(--primary-6))]',
   },
   UN_EXECUTED: {

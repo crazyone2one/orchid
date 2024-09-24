@@ -4,7 +4,7 @@ import {CommonPage, ModuleTreeNode, TableQueryParams} from "/@/models/common.ts"
 import {
     CreateCaseModuleTreeUrl,
     CreateCaseUrl,
-    DetailCaseUrl,
+    DetailCaseUrl, GetAssociationPublicCaseModuleCountUrl,
     GetCaseListUrl,
     GetCaseModulesCountUrl,
     GetCaseModuleTreeUrl,
@@ -20,9 +20,9 @@ import {getCaseLevels} from "/@/views/case-management/case-management-feature/co
  * 获取全部用例模块数量
  * @param params
  */
-export const getCaseModulesCounts = (params: TableQueryParams) => {
-    return alovaInstance.Post<Record<string, any>>(GetCaseModulesCountUrl, params);
-};
+export const getCaseModulesCounts = (params: TableQueryParams) => alovaInstance.Post<Record<string, any>>(GetCaseModulesCountUrl, params);
+export const getPublicLinkCaseModulesCounts = (params: TableQueryParams) => alovaInstance.Post<Record<string, any>>(GetAssociationPublicCaseModuleCountUrl, params);
+
 /**
  * 获取回收站模块数量
  * @param params
@@ -46,10 +46,10 @@ export const getCaseDetail = (id: string) => {
 };
 /**
  * 获取模块树
- * @param projectId
+ * @param params
  */
-export const getCaseModuleTree = (projectId: string) => {
-    return alovaInstance.Get<Array<ModuleTreeNode>>(`${GetCaseModuleTreeUrl}/${projectId}`)
+export const getCaseModuleTree = (params: TableQueryParams) => {
+    return alovaInstance.Get<Array<ModuleTreeNode>>(`${GetCaseModuleTreeUrl}/${params.projectId}`)
 };
 /**
  *  创建模块树

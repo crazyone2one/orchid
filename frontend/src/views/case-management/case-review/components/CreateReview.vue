@@ -10,11 +10,13 @@ import {useForm, useRequest} from "alova/client";
 import {
   addReview,
   copyReview,
+  editReview,
   getReviewDetail,
   getReviewModules,
   getReviewUsers
 } from "/@/api/modules/case-management/case-review.ts";
 import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
+import AssociateDrawer from "/@/views/case-management/case-review/components/AssociateDrawer.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -30,6 +32,8 @@ const rules = {
 };
 const moduleOptions = ref<TreeSelectOption []>([]);
 const reviewersOptions = ref<SelectOption[]>([]);
+const caseAssociateVisible = ref<boolean>(false);
+const caseAssociateProject = ref(appStore.currentProjectId);
 const selectedAssociateCasesParams = ref<BaseAssociateCaseRequest>({
   excludeIds: [],
   selectIds: [],
@@ -145,8 +149,52 @@ const saveReview = (isGoReview = false) => {
     }
   })
 }
+const handleUpdateReview = () => {
+  formRef.value?.validate(async errors => {
+    if (!errors) {
+      try {
+        saveLoading.value = true
+        const {name, folderId, type, cycle, tags, desc, reviewers} = form.value;
+        await editReview({
+          id: route.query.id as string,
+          projectId: appStore.currentProjectId,
+          name,
+          moduleId: folderId,
+          reviewPassRule: type, // 评审通过规则
+          startTime: cycle ? cycle[0] : null,
+          endTime: cycle ? cycle[1] : null,
+          tags,
+          description: desc,
+          reviewers, // 评审人员
+        });
+        window.$message.success(t('common.updateSuccess'));
+        handleCancel()
+      } catch (error) {
+        console.log(error);
+      } finally {
+        saveLoading.value = false;
+      }
+    }
+  })
+}
 const handleCancel = () => {
   router.back()
+}
+const writeAssociateCases = (param: BaseAssociateCaseRequest) => {
+  selectedAssociateCasesParams.value = { ...param };
+  console.log(selectedAssociateCasesParams.value)
+}
+const handleClearSelectedCases = () => {
+  selectedAssociateCasesParams.value = {
+    excludeIds: [],
+    selectIds: [],
+    selectAll: false,
+    condition: {},
+    moduleIds: [],
+    versionId: '',
+    refId: '',
+    projectId: '',
+  };
 }
 onBeforeMount(() => {
   initModules();
@@ -224,9 +272,9 @@ onBeforeMount(() => {
             <div>{{ t('caseManagement.caseReview.pickCases') }}</div>
             <n-divider v-if="!isCopy" margin="4px" vertical/>
             <n-button
-                v-if="!isCopy"
-                text
+                v-if="!isCopy" text
                 :disabled="selectedAssociateCasesParams.selectIds.length === 0"
+                @click="handleClearSelectedCases"
             >
               {{ t('caseManagement.caseReview.clearSelectedCases') }}
             </n-button>
@@ -251,7 +299,7 @@ onBeforeMount(() => {
                 v-permission="['CASE_REVIEW:READ+RELEVANCE']"
                 text
                 class="font-medium"
-
+                @click="caseAssociateVisible = true"
             >
               {{ t('ms.case.associate.title') }}
             </n-button>
@@ -263,7 +311,7 @@ onBeforeMount(() => {
       <div class="flex items-center">
         <n-button secondary :disabled="saveLoading" @click="handleCancel">{{ t('common.cancel') }}</n-button>
         <n-button v-if="isEdit" v-permission="['CASE_REVIEW:READ+UPDATE']" type="primary" class="ml-[16px]"
-                  :loading="saveLoading">
+                  :loading="saveLoading" @click="handleUpdateReview">
           {{ t('common.update') }}
         </n-button>
         <template v-else>
@@ -281,6 +329,12 @@ onBeforeMount(() => {
       </div>
     </template>
   </o-card>
+  <associate-drawer v-model:visible="caseAssociateVisible"
+                    v-model:project="caseAssociateProject"
+                    :reviewers="form.reviewers"
+                    :has-not-associated-ids="selectedAssociateCasesParams.selectIds"
+                    :reviewers-options="reviewersOptions"
+                    @success="writeAssociateCases"/>
 </template>
 
 <style scoped>

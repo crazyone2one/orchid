@@ -67,7 +67,7 @@ const loadedCase = (detail: DetailCase) => {
   customFields.value = detailInfo.value?.customFields as CustomAttributes[];
   caseLevels.value = getCaseLevels(customFields.value) as CaseLevel;
 }
-const {send: fetchCaseTree,} = useRequest(() => getCaseModuleTree(currentProjectId.value), {
+const {send: fetchCaseTree,} = useRequest(() => getCaseModuleTree({ projectId: currentProjectId.value }), {
   immediate: false,
   force: true
 })

@@ -90,6 +90,52 @@ const CaseManagement: AppRouteRecordRaw = {
                 ],
             },
         },
+        // 评审详情
+        {
+            path: 'caseManagementReviewDetail',
+            name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL,
+            component: () => import('/@/views/case-management/case-review/ReviewDetail.vue'),
+            meta: {
+                locale: 'menu.caseManagement.caseManagementReviewDetail',
+                roles: ['CASE_REVIEW:READ'],
+                breadcrumbs: [
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW,
+                        locale: 'menu.caseManagement.caseManagementReview',
+                    },
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL,
+                        locale: 'menu.caseManagement.caseManagementReviewDetail',
+                    },
+                ],
+            },
+        },
+        // 评审详情-用例详情
+        {
+            path: 'caseManagementReviewDetailCaseDetail',
+            name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL_CASE_DETAIL,
+            component: () => import('/@/views/case-management/case-review/CaseDetail.vue'),
+            meta: {
+                locale: 'menu.caseManagement.caseManagementCaseDetail',
+                roles: ['CASE_REVIEW:READ'],
+                breadcrumbs: [
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW,
+                        locale: 'menu.caseManagement.caseManagementReview',
+                    },
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL,
+                        locale: 'menu.caseManagement.caseManagementReviewDetail',
+                        isBack: true,
+                        query: ['id'],
+                    },
+                    {
+                        name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_DETAIL_CASE_DETAIL,
+                        locale: 'menu.caseManagement.caseManagementCaseDetail',
+                    },
+                ],
+            },
+        },
     ],
 };
 export default CaseManagement;

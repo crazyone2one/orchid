@@ -78,11 +78,11 @@ defineExpose({
               </div>
               <span> ({{ props.count }})</span>
             </div>
-            <div class="max-w-[400px] text-[14px] font-medium">
-              {{ props.name }}
-              <span>({{ props.count }})</span>
-            </div>
           </template>
+          <div class="max-w-[400px] text-[14px] font-medium">
+            {{ props.name }}
+            <span>({{ props.count }})</span>
+          </div>
         </n-popover>
         <slot name="nameRight"></slot>
       </div>

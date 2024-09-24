@@ -41,7 +41,7 @@ const currentProjectId = computed(() => appStore.currentProjectId);
 const moduleKeyword = useVModel(props, 'groupKeyword', emits);
 const caseTree = ref<ModuleTreeNode[]>([]);
 const selectedNodeKeys = ref(props.selectedKeys || []);
-const {send: fetchCaseTree, loading} = useRequest(() => getCaseModuleTree(currentProjectId.value), {
+const {send: fetchCaseTree, loading} = useRequest(() => getCaseModuleTree({ projectId: currentProjectId.value }), {
   immediate: false,
   force: true
 })

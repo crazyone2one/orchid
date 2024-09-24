@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import OCard from '/@/components/o-card/index.vue'
 import ModuleTree from "/src/views/case-management/case-review/components/index/ModuleTree.vue";
-import {ref, unref, watch} from "vue";
+import {ref, unref} from "vue";
 import {ModuleTreeNode} from "/@/models/common.ts";
 import ReviewTable from "/@/views/case-management/case-review/components/index/ReviewTable.vue";
 import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
 import {useRouter} from "vue-router";
 import {ReviewListQueryParams} from "/@/models/case-management/case-review.ts";
+import {useRequest} from "alova/client";
+import {reviewModuleCount} from "/@/api/modules/case-management/case-review.ts";
 
 
 type ShowType = 'all' | 'reviewByMe' | 'createByMe';
@@ -30,17 +32,15 @@ const handleFolderNodeSelect = (ids: string[], _offspringIds: string[]) => {
 const goCreateReview = () => {
   router.push({
     name: CaseManagementRouteEnum.CASE_MANAGEMENT_REVIEW_CREATE,
-    query:
-        activeFolderId.value === 'all'
-            ? {}
-            : {
-              moduleId: activeFolderId.value,
-            },
+    query: activeFolderId.value === 'all' ? {} : {moduleId: activeFolderId.value,},
   });
 }
-const initModuleCount = (params: ReviewListQueryParams) => {
-  console.log(params)
-}
+const {send: fetchModuleCount} = useRequest(param => reviewModuleCount(param), {immediate: false, force: true})
+const initModuleCount = async (params: ReviewListQueryParams) => {
+  fetchModuleCount(params).then(res => {
+    modulesCount.value = res
+  })
+};
 </script>
 
 <template>

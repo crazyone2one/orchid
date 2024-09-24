@@ -19,7 +19,7 @@ export const reviewResultMap: ReviewResultMap = {
   },
   UNDER_REVIEWED: {
     label: 'caseManagement.caseReview.reviewing',
-    color: 'rgb(var(--link-6))',
+    color: 'rgb(22,93,255)',
     icon: 'icon-icon_testing',
   },
   PASS: {

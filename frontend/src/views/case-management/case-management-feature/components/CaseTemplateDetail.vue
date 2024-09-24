@@ -127,7 +127,7 @@ const expectedResultFileIds = ref<string[]>([]);
 // 描述附件id
 const descriptionFileIds = ref<string[]>([]);
 const caseTree = ref<ModuleTreeNode[]>([]);
-const {send: fetchCaseTree} = useRequest(() => getCaseModuleTree(currentProjectId.value), {
+const {send: fetchCaseTree} = useRequest(() => getCaseModuleTree({ projectId: currentProjectId.value }), {
   immediate: false,
   force: true
 })

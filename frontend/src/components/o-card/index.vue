@@ -25,6 +25,7 @@ const props = withDefaults(defineProps<Partial<{
   showFullScreen: boolean; // 是否显示全屏按钮
   saveText?: string; // 保存按钮文案
   saveAndContinueText?: string; // 保存并继续按钮文案
+  noBottomRadius?: boolean; // 底部是否有圆角
 }>>(), {
   simple: false,
   hideContinue: false,
@@ -36,6 +37,7 @@ const props = withDefaults(defineProps<Partial<{
   autoWidth: false,
   hasBreadcrumb: false,
   noContentPadding: false,
+  noBottomRadius: false,
 })
 
 const emit = defineEmits(['saveAndContinue', 'save', 'toggleFullScreen']);
@@ -53,19 +55,33 @@ const handleBack = () => {
 <template>
   <n-spin class="z-[100] !block" :show="props.loading">
     <n-card
-        :segmented="{
-      content: true,
-      footer: 'soft',
-    }"
+        :segmented="!hideDivider"
+        :class="[
+        'ms-card',
+        'relative',
+        'h-full',
+        props.noContentPadding ? 'ms-card--noContentPadding' : 'p-[16px]',
+        props.noBottomRadius ? 'ms-card--noBottomRadius' : '',
+        !props.hideFooter && !props.simple ? 'pb-[24px]' : '',
+      ]"
     >
       <template #header>
-        <slot name="headerLeft">
-          <div class="font-medium text-gray-900">{{ props.title }}</div>
-          <div class="text-gray-300">{{ props.subTitle }}</div>
-        </slot>
+        <div class="ms-card-header"
+             :style="props.headerMinWidth ? { minWidth: `${props.headerMinWidth}px` } : {}">
+          <slot name="headerLeft">
+            <div class="font-medium text-gray-900">{{ props.title }}</div>
+            <div class="text-gray-300">{{ props.subTitle }}</div>
+          </slot>
+        </div>
+
       </template>
       <template #header-extra>
-        <slot name="headerRight"></slot>
+        <div class="ml-auto flex items-center">
+          <slot name="headerRight"></slot>
+          <div v-if="$slots.subHeader">
+            <slot name="subHeader"></slot>
+          </div>
+        </div>
       </template>
       <div class="relative h-full w-full" :style="{ minWidth: `${props.minWidth || 1000}px` }">
         <slot></slot>
@@ -97,14 +113,24 @@ const handleBack = () => {
 </template>
 
 <style scoped>
-.ms-card-footer{
-  @apply fixed flex justify-between bg-white;
-  right: 16px;
-  bottom: 0;
-  z-index: 100;
-  padding: 24px;
-  border-bottom: 0;
+.ms-card {
+  @apply relative overflow-hidden bg-white;
 
-  --tw-shadow: 0 -1px 4px rgb(2 2 2 / 10%);
+  .ms-card-header {
+    @apply flex flex-wrap items-center;
+
+    padding-bottom: 16px;
+  }
+
+  .ms-card-footer {
+    @apply fixed flex justify-between bg-white;
+    right: 16px;
+    bottom: 0;
+    z-index: 100;
+    padding: 24px;
+    border-bottom: 0;
+
+    --tw-shadow: 0 -1px 4px rgb(2 2 2 / 10%);
+  }
 }
 </style>

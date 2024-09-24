@@ -83,13 +83,13 @@ public class CaseReview implements Serializable {
      * 评审开始时间
      */
     @Schema(description = "评审开始时间")
-    private LocalDateTime startTime;
+    private Long startTime;
 
     /**
      * 评审结束时间
      */
     @Schema(description = "评审结束时间")
-    private LocalDateTime endTime;
+    private Long endTime;
 
     @Schema(description = "用例数", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "{case_review.case_count.not_blank}", groups = {Created.class})
