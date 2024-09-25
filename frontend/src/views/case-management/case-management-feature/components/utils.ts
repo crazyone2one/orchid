@@ -189,3 +189,29 @@ export const buggerTab: TabItemType[] = [
         isShow: true,
     },
 ];
+export const executionResultMap: Record<string, any> = {
+    PENDING: {
+        key: 'PENDING',
+        icon: StatusType.PENDING,
+        statusText: t('common.unExecute'),
+        color: 'text-[var(--color-text-brand)]',
+    },
+    SUCCESS: {
+        key: 'SUCCESS',
+        icon: StatusType.SUCCESS,
+        statusText: t('common.success'),
+        color: '',
+    },
+    BLOCKED: {
+        key: 'BLOCKED',
+        icon: StatusType.BLOCKED,
+        statusText: t('common.block'),
+        color: 'text-[var(--color-fill-p-3)]',
+    },
+    ERROR: {
+        key: 'ERROR',
+        icon: StatusType.ERROR,
+        statusText: t('common.fail'),
+        color: '',
+    },
+};

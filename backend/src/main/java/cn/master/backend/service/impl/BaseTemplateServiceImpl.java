@@ -52,8 +52,8 @@ import static cn.master.backend.handler.result.CommonResultCode.*;
 @RequiredArgsConstructor
 public class BaseTemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> implements BaseTemplateService {
     protected final BaseTemplateCustomFieldService baseTemplateCustomFieldService;
-    private final BaseCustomFieldService baseCustomFieldService;
-    private final BaseCustomFieldOptionService baseCustomFieldOptionService;
+    protected final BaseCustomFieldService baseCustomFieldService;
+    protected final BaseCustomFieldOptionService baseCustomFieldOptionService;
 
     @Override
     @Transactional(rollbackOn = Exception.class)

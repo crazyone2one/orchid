@@ -12,6 +12,7 @@ import cn.master.backend.handler.annotation.Log;
 import cn.master.backend.payload.dto.functional.FunctionalCaseDetailDTO;
 import cn.master.backend.payload.dto.functional.FunctionalCasePageDTO;
 import cn.master.backend.payload.dto.functional.FunctionalCaseVersionDTO;
+import cn.master.backend.payload.dto.project.CustomFieldOptions;
 import cn.master.backend.payload.dto.system.template.TemplateDTO;
 import cn.master.backend.payload.request.functional.*;
 import cn.master.backend.service.FunctionalCaseService;
@@ -109,4 +110,11 @@ public class FunctionalCaseController {
     public Map<String, Long> moduleCount(@Validated @RequestBody FunctionalCasePageRequest request) {
         return functionalCaseService.moduleCount(request, false);
     }
+    @GetMapping("/custom/field/{projectId}")
+    @Operation(summary = "用例管理-功能用例-获取表头自定义字段(高级搜索中的自定义字段)")
+    @HasAuthorize(PermissionConstants.FUNCTIONAL_CASE_READ)
+    public List<CustomFieldOptions> getTableCustomField(@PathVariable String projectId) {
+        return projectTemplateService.getTableCustomField(projectId, TemplateScene.FUNCTIONAL.name());
+    }
+
 }

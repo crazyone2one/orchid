@@ -95,7 +95,7 @@ onMounted(() => {
         {{ reviewDetail.name }}
       </n-tooltip>
       <div
-          class="rounded-[0_999px_999px_0] border border-solid border-[text-[rgb(var(--primary-5))]] px-[8px] py-[2px] text-[12px] leading-[16px] text-blue-600">
+          class="rounded-[0_999px_999px_0] border border-solid px-[8px] py-[2px] text-[12px] leading-[16px] text-blue-600">
         <div class="i-carbon-flow-logs-vpc"/>
         {{
           reviewDetail.reviewPassRule === 'SINGLE' ? $t('caseManagement.caseReview.single') : $t('caseManagement.caseReview.multi')

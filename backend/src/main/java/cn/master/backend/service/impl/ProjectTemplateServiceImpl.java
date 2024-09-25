@@ -4,11 +4,10 @@ import cn.master.backend.constants.CustomFieldType;
 import cn.master.backend.constants.ProjectApplicationType;
 import cn.master.backend.constants.TemplateScene;
 import cn.master.backend.constants.TemplateScopeType;
-import cn.master.backend.entity.CustomFieldOption;
-import cn.master.backend.entity.ProjectApplication;
-import cn.master.backend.entity.Template;
+import cn.master.backend.entity.*;
 import cn.master.backend.handler.exception.MSException;
 import cn.master.backend.mapper.TemplateMapper;
+import cn.master.backend.payload.dto.project.CustomFieldOptions;
 import cn.master.backend.payload.dto.system.ProjectDTO;
 import cn.master.backend.payload.dto.system.template.ProjectTemplateDTO;
 import cn.master.backend.payload.dto.system.template.TemplateDTO;
@@ -17,6 +16,7 @@ import cn.master.backend.payload.request.system.template.TemplateUpdateRequest;
 import cn.master.backend.service.*;
 import com.mybatisflex.core.query.QueryChain;
 import jakarta.transaction.Transactional;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static cn.master.backend.entity.table.TemplateTableDef.TEMPLATE;
 import static cn.master.backend.handler.result.CommonResultCode.DEFAULT_TEMPLATE_PERMISSION;
 import static cn.master.backend.handler.result.ProjectResultCode.PROJECT_TEMPLATE_PERMISSION;
 
@@ -173,6 +174,35 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
             }
         });
         return templateDTO;
+    }
+
+    @Override
+    public List<CustomFieldOptions> getTableCustomField(String projectId, String scene) {
+        List<Template> templates = QueryChain.of(templateMapper).where(TEMPLATE.SCOPE_ID.eq(projectId))
+                .and(TEMPLATE.SCENE.eq(scene)).list();
+        if (CollectionUtils.isNotEmpty(templates)) {
+            List<String> templateIds = templates.stream().map(Template::getId).toList();
+            List<TemplateCustomField> fieldList = baseTemplateCustomFieldService.getByTemplateIds(templateIds);
+            List<String> fieldIds = fieldList.stream().map(TemplateCustomField::getFieldId).distinct().toList();
+            List<CustomField> customFields = baseCustomFieldService.getByIds(fieldIds);
+            List<CustomFieldOption> customFieldOptions = baseCustomFieldOptionService.getByFieldIds(fieldIds);
+            Map<String, List<CustomFieldOption>> optionMap = customFieldOptions.stream().collect(Collectors.groupingBy(CustomFieldOption::getFieldId));
+            return customFields.stream().map(customField -> {
+                CustomFieldOptions optionDTO = new CustomFieldOptions();
+                optionDTO.setId(customField.getId());
+                if (customField.getInternal()) {
+                    optionDTO.setInternalFieldKey(customField.getName());
+                    optionDTO.setName(baseCustomFieldService.translateInternalField(customField.getName()));
+                } else {
+                    optionDTO.setName(customField.getName());
+                }
+                optionDTO.setOptions(optionMap.get(customField.getId()));
+                optionDTO.setInternal(customField.getInternal());
+                optionDTO.setType(customField.getType());
+                return optionDTO;
+            }).collect(Collectors.toList());
+        }
+        return List.of();
     }
 
     private Template getInternalTemplate(String projectId, String scene) {

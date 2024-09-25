@@ -9,7 +9,7 @@ import {
     GetCaseModulesCountUrl,
     GetCaseModuleTreeUrl,
     GetDefaultTemplateFieldsUrl,
-    GetRecycleCaseModulesCountUrl,
+    GetRecycleCaseModulesCountUrl, GetSearchCustomFieldsUrl,
     UpdateCaseUrl
 } from "/@/api/req-urls/case-management/feature-case.ts";
 import {CaseManagementTable, CreateOrUpdateModule, CustomAttributes} from "/@/models/case-management/feature-case.ts";
@@ -107,3 +107,8 @@ export const updateCaseRequest = (params: Record<string, any>) => {
     }
     return uploadInstance.Post<CreateOrUpdateModule>(UpdateCaseUrl, formData);
 };
+/**
+ * 高级搜索的自定义字段
+ * @param projectId
+ */
+export const getCustomFieldsTable = (projectId: string) => alovaInstance.Get<CaseManagementTable>(`${GetSearchCustomFieldsUrl}/${projectId}`)

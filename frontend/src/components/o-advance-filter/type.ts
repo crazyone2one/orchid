@@ -1,20 +1,6 @@
-import {OperatorEnum} from "/@/enums/advanced-filter-enum.ts";
+import {OperatorEnum, FilterType} from "/@/enums/advanced-filter-enum.ts";
 import type {CascaderOption, CascaderProps, SelectProps, TreeSelectProps} from "naive-ui";
 import {TreeNodeData} from "/@/components/o-tree/types.ts";
-
-export enum FilterType {
-    INPUT = 'Input',
-    NUMBER = 'Number',
-    SELECT = 'Select',
-    DATE_PICKER = 'DatePicker',
-    CASCADER = 'Cascader',
-    TAGS_INPUT = 'TagsInput',
-    TREE_SELECT = 'TreeSelect',
-    TEXTAREA = 'textArea',
-    RADIO = 'radio',
-    CHECKBOX = 'checkbox',
-    JIRAKEY = 'JIRAKEY',
-}
 
 export enum BackEndEnum {
     STRING = 'string',
@@ -78,4 +64,35 @@ export interface ViewItem {
 export interface ViewList {
     internalViews: ViewItem[];
     customViews: ViewItem[];
+}
+
+export interface ViewParams extends FilterResult {
+    id?: string;
+    name: string;
+    scopeId?: string;
+}
+
+export interface ViewDetail extends ViewParams {
+    userId?: string;
+    viewType?: string;
+    internal?: boolean; // 是否为内置视图
+    createTime?: number;
+    updateTime?: number;
+}
+
+export interface FilterForm  {
+    list: FilterFormItem[];
+    // 匹配模式 所有/任一
+    searchMode?: AccordBelowType;
+    // 高级搜索
+    conditions?: ConditionsItem[];
+    combine?: any;
+    id?: string;
+    name: string;
+    scopeId?: string;
+    userId?: string;
+    viewType?: string;
+    internal?: boolean; // 是否为内置视图
+    createTime?: number;
+    updateTime?: number;
 }

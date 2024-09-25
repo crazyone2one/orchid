@@ -1,6 +1,7 @@
 package cn.master.backend.service;
 
 import cn.master.backend.entity.Template;
+import cn.master.backend.payload.dto.project.CustomFieldOptions;
 import cn.master.backend.payload.dto.system.template.TemplateDTO;
 import cn.master.backend.payload.request.system.template.TemplateUpdateRequest;
 
@@ -30,4 +31,6 @@ public interface ProjectTemplateService extends BaseTemplateService {
     TemplateDTO getTemplateDTOById(String templateId, String projectId, String scene);
 
     TemplateDTO getDefaultTemplateDTO(String projectId, String scene);
+
+    List<CustomFieldOptions> getTableCustomField(String projectId, String scene);
 }

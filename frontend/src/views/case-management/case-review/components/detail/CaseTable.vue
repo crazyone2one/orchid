@@ -4,16 +4,17 @@ import {computed, h, onActivated, onBeforeMount, ref, resolveDirective, unref, w
 import {
   ReviewCaseItem,
   ReviewDetailCaseListQueryParams,
-  ReviewPassRule, ReviewResult
+  ReviewPassRule,
+  ReviewResult
 } from "/@/models/case-management/case-review.ts";
 import {useI18n} from "vue-i18n";
 import {useAppStore, useUserStore} from "/@/store";
 import {findNodeByKey} from "/@/utils";
 import useCaseReviewStore from "/@/store/modules/case/case-review.ts";
-import {ViewTypeEnum} from "/@/enums/advanced-filter-enum.ts";
-import {DataTableColumns, DataTableRowKey, NButton, NDivider, NTooltip} from "naive-ui";
-import {usePagination} from "alova/client";
-import {getReviewDetailCasePage} from "/@/api/modules/case-management/case-review.ts";
+import {FilterType, ViewTypeEnum} from "/@/enums/advanced-filter-enum.ts";
+import {DataTableColumns, DataTableRowKey, NButton, NDivider, NTooltip, SelectOption} from "naive-ui";
+import {usePagination, useRequest} from "alova/client";
+import {getReviewDetailCasePage, getReviewUsers} from "/@/api/modules/case-management/case-review.ts";
 import {useRoute, useRouter} from "vue-router";
 import useCacheStore from "/@/store/modules/cache";
 import {CaseManagementRouteEnum} from "/@/enums/route-enum.ts";
@@ -21,6 +22,10 @@ import CaseLevel from "/@/components/o-case-associate/CaseLevel.vue";
 import {reviewResultMap} from "/@/config/case-management.ts";
 import OButton from "/@/components/o-button/index.vue";
 import PopConfirm from "/@/components/o-popconfirm/index.vue";
+import {FilterFormItem, FilterResult} from "/@/components/o-advance-filter/type.ts";
+import {executionResultMap} from "/@/views/case-management/case-management-feature/components/utils.ts";
+import {getCustomFieldsTable} from "/@/api/modules/case-management/feature-case.ts";
+import {getFilterCustomFields} from "/@/components/o-advance-filter/index.ts";
 
 const props = defineProps<{
   activeFolder: string;
@@ -227,21 +232,152 @@ const searchCase = () => {
   fetchReviewCase()
   getModuleCount()
 }
+const reviewersOptions = ref<SelectOption[]>([]);
+const {send: fetchReviewUsers} = useRequest(() => getReviewUsers(appStore.currentProjectId, ''), {immediate: false});
+const initReviewers = () => {
+  fetchReviewUsers().then(res => reviewersOptions.value = res.map((e) => ({label: e.name, value: e.id})))
+}
+const mountedLoad = () => {
+  initReviewers();
+  initFilter()
+}
+const reviewResultOptions = computed(() => {
+  return Object.keys(reviewResultMap).map((key) => {
+    return {
+      value: key,
+      label: t(reviewResultMap[key as ReviewResult].label),
+    };
+  });
+});
+const executeResultOptions = computed(() => {
+  return Object.keys(executionResultMap).map((key) => {
+    return {
+      value: key,
+      label: executionResultMap[key].statusText,
+    };
+  });
+});
+const filterConfigList = computed<FilterFormItem[]>(() => [
+  {
+    title: 'caseManagement.featureCase.tableColumnID',
+    dataIndex: 'num',
+    type: FilterType.INPUT,
+  },
+  {
+    title: 'caseManagement.featureCase.tableColumnName',
+    dataIndex: 'name',
+    type: FilterType.INPUT,
+  },
+  {
+    title: 'common.belongModule',
+    dataIndex: 'moduleId',
+    type: FilterType.TREE_SELECT,
+    treeSelectData: moduleTree.value,
+    treeSelectProps: {
+      fieldNames: {
+        title: 'name',
+        key: 'id',
+        children: 'children',
+      },
+      multiple: true,
+      treeCheckable: true,
+      treeCheckStrictly: true,
+    },
+  },
+  {
+    title: 'caseManagement.featureCase.tableColumnReviewResult',
+    dataIndex: 'status',
+    type: FilterType.SELECT,
+    selectProps: {
+      multiple: true,
+      options: reviewResultOptions.value,
+    },
+  },
+  {
+    title: 'caseManagement.caseReview.reviewer',
+    dataIndex: 'reviewers',
+    type: FilterType.SELECT,
+    selectProps: {
+      multiple: true,
+      options: reviewersOptions.value,
+    },
+  },
+  {
+    title: 'caseManagement.featureCase.tableColumnExecutionResult',
+    dataIndex: 'lastExecuteResult',
+    type: FilterType.SELECT,
+    selectProps: {
+      multiple: true,
+      options: executeResultOptions.value,
+    },
+  },
+  {
+    title: 'caseManagement.featureCase.associatedDemand',
+    dataIndex: 'demand',
+    type: FilterType.INPUT,
+  },
+  {
+    title: 'caseManagement.featureCase.relatedAttachments',
+    dataIndex: 'attachment',
+    type: FilterType.INPUT,
+  },
+  {
+    title: 'common.creator',
+    dataIndex: 'createUser',
+    type: FilterType.MEMBER,
+  },
+  {
+    title: 'common.createTime',
+    dataIndex: 'createTime',
+    type: FilterType.DATE_PICKER,
+  },
+  {
+    title: 'common.updateUserName',
+    dataIndex: 'updateUser',
+    type: FilterType.MEMBER,
+  },
+  {
+    title: 'common.updateTime',
+    dataIndex: 'updateTime',
+    type: FilterType.DATE_PICKER,
+  },
+  {
+    title: 'common.tag',
+    dataIndex: 'tags',
+    type: FilterType.TAGS_INPUT,
+    numberProps: {
+      min: 0,
+      precision: 0,
+    },
+  },
+]);
+const searchCustomFields = ref<FilterFormItem[]>([]);
+const {send: fetchCustomFields} = useRequest(() => getCustomFieldsTable(appStore.currentProjectId), {immediate: false})
+const initFilter = () => {
+  fetchCustomFields().then(res => searchCustomFields.value = getFilterCustomFields(res as any))
+}
 const loadReviewCase = () => {
   searchCase();
   setTimeout(() => {
     reviewerTitlePopupVisible.value = false;
   }, 5000);
 }
+const handleAdvSearch = (filter: FilterResult, id: string, isStartAdvance: boolean) => {
+  console.log(filter)
+  console.log(id)
+  console.log(isStartAdvance)
+}
 onBeforeMount(() => {
   if (!isActivated.value) {
     loadReviewCase();
+    mountedLoad();
   }
 });
 
 onActivated(() => {
   if (isActivated.value) {
     loadReviewCase();
+    mountedLoad();
   }
 });
 </script>
@@ -249,12 +385,14 @@ onActivated(() => {
 <template>
   <div class="h-full px-[24px] py-[16px]">
     <div class="mb-[16px]">
-      <advance-filter :filter-config-list="[]"
+      <advance-filter ref="advanceFilterRef" :filter-config-list="filterConfigList"
+                      :custom-fields-config-list="searchCustomFields"
                       :view-type="ViewTypeEnum.REVIEW_FUNCTIONAL_CASE"
                       :search-placeholder="t('caseManagement.caseReview.searchPlaceholder')"
                       :count="modulesCount[props.activeFolder] || 0"
                       :name="moduleNamePath"
-                      :not-show-input-search="showType !== 'list'">
+                      :not-show-input-search="showType !== 'list'"
+                      @adv-search="handleAdvSearch">
         <template v-if="showType !== 'list'" #nameRight>
           <div v-if="reviewPassRule === 'MULTIPLE'" class="ml-[16px]">
             <n-switch v-model:value="onlyMineStatus" size="small" class="mr-[4px]"/>
