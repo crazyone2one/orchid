@@ -57,7 +57,7 @@ import {
     NTag,
     NText,
     NTooltip,
-    NTreeSelect, NGridItem, NDatePicker
+    NTreeSelect, NGridItem, NDatePicker, NEmpty
 } from "naive-ui";
 
 export default create({
@@ -101,6 +101,6 @@ export default create({
         NNotificationProvider,
         NModalProvider,
         NFlex, NSplit, NSelect, NSpin, NRadioGroup, NRadio, NRadioButton, NDataTable, NFormItem, NDivider, NCheckbox, NModal, NTag, NCheckboxGroup,
-        NSwitch, NScrollbar, NTreeSelect, NDynamicTags, NGrid, NFormItemGi, NGridItem, NDatePicker
+        NSwitch, NScrollbar, NTreeSelect, NDynamicTags, NGrid, NFormItemGi, NGridItem, NDatePicker, NEmpty
     ],
 });

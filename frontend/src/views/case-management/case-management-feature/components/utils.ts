@@ -5,6 +5,7 @@ import {FormItem} from "/@/views/case-management/case-management-feature/compone
 import {CustomAttributes, TabItemType} from "/@/models/case-management/feature-case.ts";
 import {useI18n} from "/@/hooks/use-i18n.ts";
 import {StatusType} from "/@/enums/case-enum.ts";
+import {ReviewResult} from "/@/models/case-management/case-review.ts";
 
 const {t} = useI18n();
 export const getModules = (moduleIds: string, treeData: ModuleTreeNode[]) => {
@@ -140,7 +141,7 @@ export const tabDefaultSettingList: TabItemType[] = [
         canHide: true,
         isShow: true,
     },
- ]
+]
 
 export const caseTab: TabItemType[] = [
     {
@@ -215,3 +216,47 @@ export const executionResultMap: Record<string, any> = {
         color: '',
     },
 };
+export const getCustomField = (customFields: any) => {
+    const multipleExcludes = ['MULTIPLE_SELECT', 'CHECKBOX', 'MULTIPLE_MEMBER'];
+    const selectExcludes = ['MEMBER', 'RADIO', 'SELECT'];
+    let selectValue: Record<string, any>;
+    // 处理多选项
+    if (multipleExcludes.includes(customFields.type) && customFields.defaultValue) {
+        selectValue = JSON.parse(customFields.defaultValue);
+        return (
+            (customFields.options || [])
+                .filter((item: any) => selectValue.includes(item.value))
+                .map((it: any) => it.text)
+                .join(',') || '-'
+        );
+    }
+    if (customFields.type === 'MULTIPLE_INPUT') {
+        // 处理标签形式
+        return JSON.parse(customFields.defaultValue).join('，') || '-';
+    }
+    if (selectExcludes.includes(customFields.type)) {
+        return (
+            (customFields.options || [])
+                .filter((item: any) => customFields.defaultValue === item.value)
+                .map((it: any) => it.text)
+                .join() || '-'
+        );
+    }
+    return customFields.defaultValue || '-';
+}
+export const getReviewResultIcon = (status: ReviewResult) => {
+    switch (status) {
+        case "UN_REVIEWED":
+            return {'icon': 'i-ic-baseline-block','color':''};
+        case "UNDER_REVIEWED":
+            return {'icon': 'i-ic-baseline-autorenew', "color": 'rgb(22,93,255)'}
+        case "PASS":
+            return {'icon': 'i-carbon-checkmark-filled', "color": 'rgb(0,180,42)'}
+        case "UN_PASS":
+            return {'icon': 'i-carbon-close-filled', "color": 'rgb(245,63,63)'}
+        case "RE_REVIEWED":
+            return {'icon': "i-carbon-recording-filled-alt", "color": 'rgb(255,125,0)'}
+        default:
+            return {}
+    }
+}

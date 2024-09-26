@@ -23,9 +23,13 @@ import {reviewResultMap} from "/@/config/case-management.ts";
 import OButton from "/@/components/o-button/index.vue";
 import PopConfirm from "/@/components/o-popconfirm/index.vue";
 import {FilterFormItem, FilterResult} from "/@/components/o-advance-filter/type.ts";
-import {executionResultMap} from "/@/views/case-management/case-management-feature/components/utils.ts";
+import {
+  executionResultMap,
+  getReviewResultIcon
+} from "/@/views/case-management/case-management-feature/components/utils.ts";
 import {getCustomFieldsTable} from "/@/api/modules/case-management/feature-case.ts";
 import {getFilterCustomFields} from "/@/components/o-advance-filter/index.ts";
+import Pagination from "/@/components/o-pagination/index.vue";
 
 const props = defineProps<{
   activeFolder: string;
@@ -80,22 +84,6 @@ const {
   data: response => response.records,
   total: response => response.total
 });
-const getStatusIcon = (status: string): Record<string, string> => {
-  switch (status) {
-    case "UN_REVIEWED":
-      return {'icon': "i-carbon-error-filled", "color": ''}
-    case "UNDER_REVIEWED":
-      return {'icon': 'i-ic-baseline-autorenew', "color": 'rgb(22,93,255)'}
-    case "PASS":
-      return {'icon': 'i-carbon-checkmark-filled', "color": 'rgb(0,180,42)'}
-    case "UN_PASS":
-      return {'icon': "i-carbon-close-filled", "color": 'rgb(245,63,63)'}
-    case "RE_REVIEWED":
-      return {'icon': "i-carbon-recording-filled-alt", "color": 'rgb(255,125,0)'}
-    default:
-      return {}
-  }
-}
 const userIsReviewer = (record: ReviewCaseItem) => {
   return record.reviewers.some((e) => e === userStore.id);
 }
@@ -139,8 +127,8 @@ const columns: DataTableColumns<ReviewCaseItem> = [
         {
           default: () => [
             h("div", {
-              class: getStatusIcon(row.status)?.icon,
-              style: {size: '14px', color: getStatusIcon(row.status)?.color}
+              class: getReviewResultIcon(row.status)?.icon,
+              style: {size: '14px', color: getReviewResultIcon(row.status)?.color}
             }, {}),
             h("div", {}, {default: () => t(reviewResultMap[row.status as ReviewResult].label)}),
           ]
@@ -366,7 +354,10 @@ const handleAdvSearch = (filter: FilterResult, id: string, isStartAdvance: boole
   console.log(filter)
   console.log(id)
   console.log(isStartAdvance)
+  // todo 高级搜索功能
 }
+const handleSetPage = (param: number) => page.value = param
+const handleSetPageSize = (param: number) => pageSize.value = param
 onBeforeMount(() => {
   if (!isActivated.value) {
     loadReviewCase();
@@ -417,6 +408,11 @@ onActivated(() => {
     <template v-if="showType === 'list'">
       <n-data-table :columns="columns" :data="data" :row-key="(tmp:ReviewCaseItem)=>tmp.id"
                     @update-checked-row-keys="handleCheck"/>
+      <div class="mt-8">
+        <pagination :page-size="pageSize" :page="page" :count="total"
+                    @update-page="handleSetPage"
+                    @update-page-size="handleSetPageSize"/>
+      </div>
     </template>
   </div>
 </template>

@@ -2,7 +2,7 @@ import {alovaInstance} from "/@/api";
 import {
     CopyReviewParams,
     Review, ReviewCaseItem, ReviewDetailCaseListQueryParams,
-    ReviewDetailReviewersItem, ReviewHistoryItem,
+    ReviewDetailReviewersItem, ReviewerAndStatus, ReviewHistoryItem,
     ReviewItem,
     ReviewListQueryParams,
     ReviewModule,
@@ -20,7 +20,7 @@ import {
     GetReviewDetailCasePageUrl,
     GetReviewDetailModuleCountUrl,
     GetReviewDetailModuleTreeUrl,
-    GetReviewDetailUrl,
+    GetReviewDetailUrl, GetReviewerAndStatusUrl,
     GetReviewListUrl,
     GetReviewModulesUrl,
     GetReviewUsersUrl,
@@ -117,3 +117,10 @@ export const getReviewList = (params: ReviewListQueryParams) => alovaInstance.Po
         }));
     }
 });
+/**
+ *  脑图-获取用例评审最终结果和每个评审人最终的评审结果
+ * @param reviewId
+ * @param caseId
+ */
+export const getReviewerAndStatus = (reviewId: string, caseId: string) =>
+    alovaInstance.Get<ReviewerAndStatus>(`${GetReviewerAndStatusUrl}/${reviewId}/${caseId}`);

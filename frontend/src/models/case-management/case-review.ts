@@ -3,6 +3,7 @@
 import {BatchApiParams, TableQueryParams} from '/@/models/common.ts';
 import {StartReviewStatus} from '/@/enums/case-enum.ts';
 import {CaseLevel} from "/@/components/o-case-associate/types.ts";
+import {OptionItem} from "/@/api/modules/message";
 
 // 评审状态, PREPARED: 待开始, UNDERWAY: 进行中, COMPLETED: 已完成, ARCHIVED: 已归档(暂时没有)
 export type ReviewStatus = 'PREPARED' | 'UNDERWAY' | 'COMPLETED';
@@ -287,7 +288,7 @@ export interface ReviewHistoryItem {
 }
 
 export interface ReviewerAndStatus {
-    // reviewerStatus: OptionItem[]; // 每个评审人最终的评审结果
+    reviewerStatus: OptionItem[]; // 每个评审人最终的评审结果
     status: ReviewResult; // 用例评审最终结果
     caseId: string;
 }

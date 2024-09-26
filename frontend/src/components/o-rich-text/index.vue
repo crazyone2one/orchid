@@ -87,7 +87,7 @@ defineExpose({});
 .rich-wrapper {
   @apply relative overflow-hidden;
 
-  ::v-deep .w-e-text-container {
+  :deep(.w-e-text-container) {
     padding: 2px 16px 16px !important;
 
     > p:first-child {
